@@ -1,3 +1,5 @@
+import re
+
 from random import random
 from time import sleep
 
@@ -19,6 +21,7 @@ class Behaviour:
         response = get_response(request)
         return response
 default = Behaviour
+_default = default()
 
 
 class HttpResponseBehaviour(Behaviour):
@@ -125,6 +128,7 @@ def json(data, *args, **kwargs):
     """A Behaviour that returns an JsonResponse object overriding the actual response of the Django
     stack. The function takes the same arguments as JsonResponse, which allows changing the content,
     status, or any other feature exposed through the constructor
+    :param data: A dictionary that is going to be serialized as JSON on the response
     :param args: Positional arguments for the JsonResponse constructor
     :param kwargs: Named arguments for the JsonResponse constructor
     :return: An JsonResponse overriding the Django stack response
@@ -246,7 +250,7 @@ class RandomChoice(Behaviour):
         for behaviour, f_x in self._behaviours:
             if x < f_x:
                 return behaviour(get_response, request)
-        return default(get_response, request)
+        return _default(get_response, request)
 
     def __str__(self):
         return ('RandomChoice('
@@ -256,7 +260,7 @@ random_choice = RandomChoice
 
 
 class ConditionalBehaviour(Behaviour):
-    def __init__(self, predicate, behaviour, alternative_behaviour=default):
+    def __init__(self, predicate, behaviour, alternative_behaviour=_default):
         """A Behaviour that invokes the encapsulated behaviour if a condition is met, otherwise it
         invokes the alternative behaviour. The default alternative behaviour is just going through
         the usual middleware path.
@@ -291,6 +295,43 @@ class ConditionalBehaviour(Behaviour):
                     predicate=self._predicate, behaviour=self._behaviour,
                     alternative_behaviour=self._alternative_behaviour)
 conditional = ConditionalBehaviour
+cond = ConditionalBehaviour
+
+
+class MultiConditionalBehaviour(Behaviour):
+    def __init__(self, predicates_behaviours, default_behaviour=_default):
+        """A Behaviour that takes several conditions (predicates) and behaviours and executes the
+        behaviour associated with the fist condition that is met. If no conditions are met,
+        the supplied default behaviour is invoked.
+        :param predicates_behaviours: A list of (predicate, behaviour) tuples
+        :param default_behaviour: The default behaviour to invoke if no conditions are met
+        """
+        self._predicates_behaviours = predicates_behaviours
+        self._default_behaviour = default_behaviour
+
+    def __call__(self, get_response, request):
+        """It iterates through the conditions until one is met, and its associated behaviour is
+        invoked and its result is returned. If no conditions are met the method returns the result
+        of invoking the default behaviour.
+        :param get_response: The get_response method provided by the Django stack
+        :param request: The request that triggered the middleware
+        :return: The result of calling the behaviour that matches one of the conditions or the
+        result of calling the default behaviour if no conditions are met.
+        """
+
+        for predicate, behaviour in self._predicates_behaviours:
+            if predicate(get_response, request):
+                return behaviour(get_response, request)
+
+        return self._default_behaviour(get_response, request)
+
+    def __str__(self, *args, **kwargs):
+        return ('MultiConditionalBehaviour('
+                'predicates_behaviours=[{predicates_behaviours}])'.format(
+                    predicates_behaviours=', '.join(
+                        '{p} -> {b}'.format(p=p, b=b) for p, b in self._predicates_behaviours)))
+multi_conditional = MultiConditionalBehaviour
+case = MultiConditionalBehaviour
 
 
 class Predicate:
@@ -414,3 +455,57 @@ class HasRequestParameterPredicate(Predicate):
         return ('HasRequestParameterPredicate('
                 'parameter={parameter})').format(parameter=self._parameter)
 has_parameter = HasRequestParameterPredicate
+
+
+class PathMatchesRegexpPredicate(Predicate):
+    def __init__(self, regexp):
+        """Checks if the request path matches the given regexp
+        :param regexp: The regexp that the request path should match
+        """
+        self._regexp = re.compile(regexp)
+
+    def __call__(self, get_response, request):
+        """Returns True if the request path matches the regexp.
+        :param get_response: The get_response method provided by the Django stack
+        :param request: The request that triggered the middleware
+        :return: True if the request matches the regexp, False otherwise
+        """
+        return bool(self._regexp.match(request.path))
+
+    def __str__(self):
+        return 'PathMatchesRegexpPredicate(regexp={regexp})'.format(regexp=self._regexp)
+path_is = PathMatchesRegexpPredicate
+
+
+class IsAuthenticatedPredicate(Predicate):
+    def __call__(self, get_response, request):
+        """Returns True if the request is authenticated
+        :param get_response: The get_response method provided by the Django stack
+        :param request: The request that triggered the middleware
+        :return: True if the request is authenticated, False otherwise
+        """
+        return hasattr(request, 'user') and request.user.is_authenticated()
+
+    def __str__(self):
+        return 'IsAuthenticatedPredicate()'
+is_authenticated = IsAuthenticatedPredicate
+
+
+class IsUserPredicate(Predicate):
+    def __init__(self, username):
+        """Checks if the request user username matches the given username
+        :param username: The username that the request user should have
+        """
+        self._username = username
+
+    def __call__(self, get_response, request):
+        """Returns True if the request user username matches the given username
+        :param get_response: The get_response method provided by the Django stack
+        :param request: The request that triggered the middleware
+        :return: True if the request user username matches the username, False otherwise
+        """
+        return hasattr(request, 'user') and request.user.username == self._username
+
+    def __str__(self):
+        return 'IsUser(username={username})'.format(username=self._username)
+user_is = IsUserPredicate
