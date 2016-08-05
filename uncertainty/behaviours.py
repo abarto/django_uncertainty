@@ -183,6 +183,12 @@ class DelayRequest(Behaviour):
         sleep(self._seconds)
         response = self._behaviour(get_response, request)
         return response
+
+    def __str__(self):
+        return ('DelayRequest('
+                'behaviour={behaviour}, '
+                'seconds={seconds})').format(behaviour=self._behaviour,
+                                             seconds=self._seconds)
 delay_request = DelayRequest
 
 
@@ -240,6 +246,11 @@ class RandomChoice(Behaviour):
             if x < f_x:
                 return behaviour(get_response, request)
         return default(get_response, request)
+
+    def __str__(self):
+        return ('RandomChoice('
+                'behaviours=[{behaviours}])').format(
+                    behaviours=', '.join(b for b in self._behaviours))
 random_choice = RandomChoice
 
 
@@ -270,7 +281,16 @@ class ConditionalBehaviour(Behaviour):
             return self._behaviour(get_response, request)
 
         return self._alternative_behaviour(get_response, request)
+
+    def __str__(self):
+        return ('ConditionalBehaviour('
+                'predicate={predicate}, '
+                'behaviour={behaviour}, '
+                'alternative_behaviour={alternative_behaviour})').format(
+                    predicate=self._predicate, behaviour=self._behaviour,
+                    alternative_behaviour=self._alternative_behaviour)
 conditional = ConditionalBehaviour
+
 
 class Predicate:
     """Represents a condition that a Django request must meet. It is used in conjunction with
@@ -299,6 +319,9 @@ class Predicate:
         """
         return AndPredicate(self, other)
 
+    def __str__(self):
+        return 'Predicate(True)'
+
 
 class OrPredicate(Predicate):
     def __init__(self, left, right):
@@ -316,6 +339,11 @@ class OrPredicate(Predicate):
         :return: True if either predicate calls is True, False otherwise
         """
         return self._left(get_response, request) or self._right(get_response, request)
+
+    def __str__(self):
+        return ('OrPredicate('
+                'left={left}, '
+                'right={right})').format(left=self._left, right=self._right)
 
 
 class AndPredicate(Predicate):
@@ -335,6 +363,11 @@ class AndPredicate(Predicate):
         """
         return self._left(get_response, request) and self._right(get_response, request)
 
+    def __str__(self):
+        return ('AndPredicate('
+                'left={left}, '
+                'right={right})').format(left=self._left, right=self._right)
+
 
 class IsMethodPredicate(Predicate):
     def __init__(self, method):
@@ -350,6 +383,10 @@ class IsMethodPredicate(Predicate):
         :return: True if the request uses the encapuslated method, False otherwise.
         """
         return request.method == self._method
+
+    def __str__(self):
+        return ('IsMethodPredicate('
+                'method={method})').format(method=self._method)
 is_method = IsMethodPredicate
 is_get = IsMethodPredicate('GET')
 is_delete = IsMethodPredicate('DELETE')
@@ -371,4 +408,8 @@ class HasRequestParameterPredicate(Predicate):
         :return: True if the request has a parameter, False otherwise
         """
         return self._parameter in request.GET or self._parameter in request.POST
+
+    def __str__(self):
+        return ('HasRequestParameterPredicate('
+                'parameter={parameter})').format(parameter=self._parameter)
 has_parameter = HasRequestParameterPredicate
