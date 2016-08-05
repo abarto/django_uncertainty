@@ -18,7 +18,7 @@ class Behaviour:
         """
         response = get_response(request)
         return response
-default = Behaviour()
+default = Behaviour
 
 
 class HttpResponseBehaviour(Behaviour):
@@ -41,7 +41,7 @@ class HttpResponseBehaviour(Behaviour):
         :return: The result of calling the HttpResponse constructor with the positional and named
         arguments supplied.
         """
-        response = self._response_class(*self._args, *self._kwargs)
+        response = self._response_class(*self._args, **self._kwargs)
         return response
 
     def __str__(self):
@@ -199,7 +199,7 @@ class RandomChoice(Behaviour):
         of "Not Found" responses, 30 percent of "Server Error" responses and 20 percent of actual
         (that go through the Django stack) responses, you should use the following:
 
-        RandomChoice([(not_found, 0.5), (server_error, 0.3), default)])
+        RandomChoice([(not_found(), 0.5), (server_error(), 0.3), default())])
 
         If you just want a random choice between several behaviours, you can omit the proportion
         specification:
@@ -220,9 +220,10 @@ class RandomChoice(Behaviour):
         if sum_with_proportions > 1 or (sum_with_proportions == 1 and len(without_proportions) > 0):
             raise ValueError('The sum of the behaviours proportions is greater than 1')
 
-        proportion = (1 - sum_with_proportions) / len(without_proportions)
-        for behaviour in without_proportions:
-            with_proportions.append((behaviour, proportion))
+        if len(without_proportions) > 0:
+            proportion = (1 - sum_with_proportions) / len(without_proportions)
+            for behaviour in without_proportions:
+                with_proportions.append((behaviour, proportion))
 
         cum_sum = 0
         cdf = []

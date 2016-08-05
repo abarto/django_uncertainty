@@ -9,7 +9,7 @@ class UncertaintyMiddleware(object):
         example, if you want Django to respond with a server_error 30% of the time, but only
         if the requests are POST or PUT, you can use the following specification:
 
-        DJANGO_UNCERTAINTY = random_choice([(conditional(is_post or is_put, server_error), 0.3)])
+        DJANGO_UNCERTAINTY = random_choice([(conditional(is_post or is_put, server_error()), 0.3)])
 
         :param get_response: The get_response method provided by the Django stack
         """

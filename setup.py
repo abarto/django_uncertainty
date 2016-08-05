@@ -2,12 +2,12 @@
 
 from setuptools import setup
 
-setup(name='django-uncertainty',
+setup(name='django_uncertainty',
       version='0.1',
       description='A Django application to generate predictable errors on sites',
       author='Agustin Barto',
       author_email='abarto@gmail.com',
-      url='https://github.com/abarto/django-uncertainty',
+      url='https://github.com/abarto/django_uncertainty',
       install_requires=[],
       classifiers=[
           'Development Status :: 4 - Beta',
