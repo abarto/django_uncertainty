@@ -10,7 +10,7 @@ with open(path.join(path.abspath(path.dirname(__file__)), 'README.md')) as f:
 
 setup(name='django_uncertainty',
       version='1.0',
-      description='A Django application to generate predictable errors on sites',
+      description='A Django middleware to generate predictable errors on sites',
       long_description=long_description,
       author='Agustin Barto',
       author_email='abarto@gmail.com',
