@@ -4,12 +4,12 @@ from os import path
 from setuptools import setup
 
 
-with open(path.join(path.abspath(path.dirname(__file__)), 'README.md')) as f:
+with open(path.join(path.abspath(path.dirname(__file__)), 'README.rst')) as f:
     long_description = f.read()
 
 
 setup(name='django_uncertainty',
-      version='1.0',
+      version='1.1',
       description='A Django middleware to generate predictable errors on sites',
       long_description=long_description,
       author='Agustin Barto',
