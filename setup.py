@@ -4,12 +4,12 @@ from os import path
 from setuptools import setup
 
 
-with open(path.join(path.abspath(path.dirname(__file__)), 'README.md'), encoding='utf-8') as f:
+with open(path.join(path.abspath(path.dirname(__file__)), 'README.md')) as f:
     long_description = f.read()
 
 
 setup(name='django_uncertainty',
-      version='0.1',
+      version='1.0',
       description='A Django application to generate predictable errors on sites',
       long_description=long_description,
       author='Agustin Barto',
@@ -21,7 +21,6 @@ setup(name='django_uncertainty',
           'Development Status :: 4 - Beta',
           'Environment :: Web Environment',
           'Framework :: Django',
-          'Framework :: Django :: 1.10',
           'Intended Audience :: Developers',
           'License :: OSI Approved :: MIT License',
           'Operating System :: OS Independent',
