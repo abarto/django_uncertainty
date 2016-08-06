@@ -4,7 +4,7 @@ django\_uncertainty
 Introduction
 ------------
 
-``django_uncertainty`` is a `Django <https://www.djangoproject.com/>`__
+``django_uncertainty`` is a `Django <https://www.djangoproject.com/>`_
 middleware that allows the developer to introduce controlled uncertainty
 into his or her site. The main purpose is providing a tool to reproduce
 less-than-ideal conditions in a local development environment to
@@ -101,7 +101,7 @@ html
 Overrides the site's response with an arbitrary HTTP response. Without
 any arguments it returns a response with status code 200 (Ok). ``html``
 takes the same arguments as Django's
-```HttpResponse`` <https://docs.djangoproject.com/en/1.10/ref/request-response/#django.http.HttpResponse>`__.
+`HttpResponse <https://docs.djangoproject.com/en/1.10/ref/request-response/#django.http.HttpResponse>`_.
 
 .. code:: python
 
@@ -118,7 +118,7 @@ bad\_request
 
 Overrides the site's response with an HTTP response with status code 400
 (Bad Request). ``bad_request`` takes the same arguments as Django's
-```HttpResponseBadRequest`` <https://docs.djangoproject.com/en/1.10/ref/request-response/#django.http.HttpResponseBadRequest>`__.
+`HttpResponseBadRequest <https://docs.djangoproject.com/en/1.10/ref/request-response/#django.http.HttpResponseBadRequest>`_.
 
 .. code:: python
 
@@ -130,7 +130,7 @@ forbidden
 
 Overrides the site's response with an HTTP response with status code 403
 (Forbidden). ``forbidden`` takes the same arguments as Django's
-```HttpResponseForbidden`` <https://docs.djangoproject.com/en/1.10/ref/request-response/#django.http.HttpResponseForbidden>`__.
+`HttpResponseForbidden <https://docs.djangoproject.com/en/1.10/ref/request-response/#django.http.HttpResponseForbidden>`_.
 
 .. code:: python
 
@@ -142,7 +142,7 @@ not\_allowed
 
 Overrides the site's response with an HTTP response with status code 405
 (Not Allowed). ``not_allowed`` takes the same arguments as Django's
-```HttpResponseNotAllowed`` <https://docs.djangoproject.com/en/1.10/ref/request-response/#django.http.HttpResponseNotAllowed>`__.
+`HttpResponseNotAllowed <https://docs.djangoproject.com/en/1.10/ref/request-response/#django.http.HttpResponseNotAllowed>`_.
 
 .. code:: python
 
@@ -155,7 +155,7 @@ server\_error
 Overrides the site's response with an HTTP response with status code 500
 (Internal Server Error). ``server_error`` takes the same arguments as
 Django's
-```HttpResponseServerError`` <https://docs.djangoproject.com/en/1.10/ref/request-response/#django.http.HttpResponseServerError>`__.
+`HttpResponseServerError <https://docs.djangoproject.com/en/1.10/ref/request-response/#django.http.HttpResponseServerError>`_.
 
 .. code:: python
 
@@ -180,7 +180,7 @@ Overrides the site's response with an arbitrary HTTP response with
 content type ``application/json``. Without any arguments it returns a
 response with status code 200 (Ok). ``json`` takes the same arguments as
 Django's
-```JsonResponse`` <https://docs.djangoproject.com/en/1.10/ref/request-response/#jsonresponse-objects>`__.
+`JsonResponse <https://docs.djangoproject.com/en/1.10/ref/request-response/#jsonresponse-objects>`_.
 
 .. code:: python
 
@@ -468,4 +468,4 @@ Feedback
 
 All feedback is appreciated, so if you found problems or have ides for
 new features, just create an issue on
-`GitHub <https://github.com/abarto/django_uncertainty>`__.
+`GitHub <https://github.com/abarto/django_uncertainty>`_.
