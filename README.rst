@@ -9,7 +9,7 @@ middleware that allows the developer to introduce controlled uncertainty
 into his or her site. The main purpose is providing a tool to reproduce
 less-than-ideal conditions in a local development environment to
 evaluate external actors might react when a Django site starts
-missbehaving.
+misbehaving.
 
 Installation
 ------------
