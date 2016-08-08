@@ -4,12 +4,13 @@ django\_uncertainty
 Introduction
 ------------
 
-``django_uncertainty`` is a `Django <https://www.djangoproject.com/>`_
-middleware that allows the developer to introduce controlled uncertainty
-into his or her site. The main purpose is providing a tool to reproduce
-less-than-ideal conditions in a local development environment to
-evaluate external actors might react when a Django site starts
-misbehaving.
+``django_uncertainty`` is a `Django <https://www.djangoproject.com/>`_ middleware that allows the
+developer to introduce controlled uncertainty into his or her site. The main purpose is providing a
+tool to reproduce less-than-ideal conditions in a local development environment to evaluate
+external actors might react when a Django site starts misbehaving.
+
+It requires `Django 1.10 <https://docs.djangoproject.com/en/1.10/releases/1.10/>`_ or later as it
+uses the new middleware framework.
 
 Installation
 ------------
@@ -41,8 +42,7 @@ your Django settings file:
 Usage
 -----
 
-The middleware behaviour is controlled by the ``DJANGO_UNCERTAINTY``
-Django setting. For example:
+The middleware behaviour is controlled by the ``DJANGO_UNCERTAINTY`` Django setting. For example:
 
 .. code:: python
 
@@ -51,10 +51,9 @@ Django setting. For example:
         u.path_is('^/api'), u.random_choice([
             (u.delay(u.default(), 5), 0.3), (u.server_error(), 0.2)]))
 
-This tells the middleware that if the request path starts with "/api",
-30% of the time the request is going to be delayed by 5 seconds, 20% of
-the time the site is going to respond with a status 500 (Server Error),
-and the rest of the time the site is going to function normally.
+This tells the middleware that if the request path starts with "/api", 30% of the time the request
+is going to be delayed by 5 seconds, 20% of the time the site is going to respond with a status 500
+(Server Error), and the rest of the time the site is going to function normally.
 
 The next section describes all the available behaviours and conditions.
 
@@ -86,9 +85,9 @@ the Django middleware.
 default
 ~~~~~~~
 
-As the name implies, this is the default behaviour. It just makes the
-requests continue as usual through the Django stack. Using ``default``
-is the same as omitting the ``DJANGO_UNCERTAINTY`` setting altogether.
+As the name implies, this is the default behaviour. It just makes the requests continue as usual
+through the Django stack. Using ``default`` is the same as omitting the ``DJANGO_UNCERTAINTY``
+setting altogether.
 
 .. code:: python
 
@@ -98,9 +97,8 @@ is the same as omitting the ``DJANGO_UNCERTAINTY`` setting altogether.
 html
 ~~~~
 
-Overrides the site's response with an arbitrary HTTP response. Without
-any arguments it returns a response with status code 200 (Ok). ``html``
-takes the same arguments as Django's
+Overrides the site's response with an arbitrary HTTP response. Without any arguments it returns a
+response with status code 200 (Ok). ``html`` takes the same arguments as Django's
 `HttpResponse <https://docs.djangoproject.com/en/1.10/ref/request-response/#django.http.HttpResponse>`_.
 
 .. code:: python
@@ -116,8 +114,8 @@ An alias for ``html``.
 bad\_request
 ~~~~~~~~~~~~
 
-Overrides the site's response with an HTTP response with status code 400
-(Bad Request). ``bad_request`` takes the same arguments as Django's
+Overrides the site's response with an HTTP response with status code 400 (Bad Request).
+``bad_request`` takes the same arguments as Django's
 `HttpResponseBadRequest <https://docs.djangoproject.com/en/1.10/ref/request-response/#django.http.HttpResponseBadRequest>`_.
 
 .. code:: python
@@ -128,8 +126,8 @@ Overrides the site's response with an HTTP response with status code 400
 forbidden
 ~~~~~~~~~
 
-Overrides the site's response with an HTTP response with status code 403
-(Forbidden). ``forbidden`` takes the same arguments as Django's
+Overrides the site's response with an HTTP response with status code 403 (Forbidden). ``forbidden``
+takes the same arguments as Django's
 `HttpResponseForbidden <https://docs.djangoproject.com/en/1.10/ref/request-response/#django.http.HttpResponseForbidden>`_.
 
 .. code:: python
@@ -140,8 +138,8 @@ Overrides the site's response with an HTTP response with status code 403
 not\_allowed
 ~~~~~~~~~~~~
 
-Overrides the site's response with an HTTP response with status code 405
-(Not Allowed). ``not_allowed`` takes the same arguments as Django's
+Overrides the site's response with an HTTP response with status code 405 (Not Allowed).
+``not_allowed`` takes the same arguments as Django's
 `HttpResponseNotAllowed <https://docs.djangoproject.com/en/1.10/ref/request-response/#django.http.HttpResponseNotAllowed>`_.
 
 .. code:: python
@@ -149,12 +147,23 @@ Overrides the site's response with an HTTP response with status code 405
     import uncertainty as u
     DJANGO_UNCERTAINTY = u.not_allowed(permitted_methods=['PUT'], content='<html><head></head><body>NOPE</body></html>')
 
+not\_found
+~~~~~~~~~~
+
+Overrides the site's response with an HTTP response with status code 404 (Not Found).
+``not_found`` takes the same arguments as Django's
+`HttpResponse <https://docs.djangoproject.com/en/1.10/ref/request-response/#django.http.HttpResponse>`_.
+
+.. code:: python
+
+    import uncertainty as u
+    DJANGO_UNCERTAINTY = u.not_found(permitted_methods=['PUT'], content='<html><head></head><body>Who?</body></html>')
+
 server\_error
 ~~~~~~~~~~~~~
 
-Overrides the site's response with an HTTP response with status code 500
-(Internal Server Error). ``server_error`` takes the same arguments as
-Django's
+Overrides the site's response with an HTTP response with status code 500 (Internal Server Error).
+``server_error`` takes the same arguments as Django's
 `HttpResponseServerError <https://docs.djangoproject.com/en/1.10/ref/request-response/#django.http.HttpResponseServerError>`_.
 
 .. code:: python
@@ -165,8 +174,7 @@ Django's
 status
 ~~~~~~
 
-Overrides the site's response with an HTTP response with a given status
-code.
+Overrides the site's response with an HTTP response with a given status code.
 
 .. code:: python
 
@@ -176,10 +184,9 @@ code.
 json
 ~~~~
 
-Overrides the site's response with an arbitrary HTTP response with
-content type ``application/json``. Without any arguments it returns a
-response with status code 200 (Ok). ``json`` takes the same arguments as
-Django's
+Overrides the site's response with an arbitrary HTTP response with content type
+``application/json``. Without any arguments it returns a response with status code 200 (Ok).
+``json`` takes the same arguments as Django's
 `JsonResponse <https://docs.djangoproject.com/en/1.10/ref/request-response/#jsonresponse-objects>`_.
 
 .. code:: python
@@ -190,8 +197,8 @@ Django's
 delay
 ~~~~~
 
-Introduces a delay after invoking another behaviour. For example, this
-specifies a delay of half a second into the actual site responses:
+Introduces a delay after invoking another behaviour. For example, this specifies a delay of half a
+second into the actual site responses:
 
 .. code:: python
 
@@ -203,52 +210,47 @@ You can replace the first argument with any other valid behaviour.
 delay\_request
 ~~~~~~~~~~~~~~
 
-It is similar to ``delay``, but the delay is introduced *before* the
-specified behaviour is invoked.
+It is similar to ``delay``, but the delay is introduced *before* the specified behaviour is invoked.
 
 random\_choice
 ~~~~~~~~~~~~~~
 
-This is the work horse of ``django_uncertainty``. ``random_choice``
-allows you to specify different behaviours that are going to be chosen
-at random (following the give proportions) when a request is received.
-It takes a list of behaviours or tuples of behaviours and proportions,
+This is the work horse of ``django_uncertainty``. ``random_choice`` allows you to specify different
+behaviours that are going to be chosen at random (following the give proportions) when a request is
+received. It takes a list of behaviours or tuples of behaviours and proportions,
 
-For example, let's say we want 30% of the request to be responded with
-an Internal Server Error response, 20% with a Bad Request response, and
-the rest with the actual response but with a 1 second delay. This can be
-specified as follows>
+For example, let's say we want 30% of the request to be responded with an Internal Server Error
+response, 20% with a Bad Request response, and the rest with the actual response but with a 1
+second delay. This can be specified as follows:
 
 .. code:: python
 
     import uncertainty as u
     DJANGO_UNCERTAINTY = u.random_choice([(u.server_error(), 0.3), (u.bad_request(), 0.2), u.delay(u.default(), 1)])
 
-If proportions are specified, the total sum of them must be less than 1.
-If no proportions are specified, the behaviours are chosen with an even
-chance between them:
+If proportions are specified, the total sum of them must be less than 1. If no proportions are
+specified, the behaviours are chosen with an even chance between them:
 
 .. code:: python
 
     import uncertainty as u
     DJANGO_UNCERTAINTY = u.random_choice([u.server_error(), u.default()])
 
-This specifies that approximetly half the request are going to be
-responded with an Internal Server Error, and half will work normally.
+This specifies that approximetly half the request are going to be responded with an Internal Server
+Error, and half will work normally.
 
 conditional
 ~~~~~~~~~~~
 
-It allows you to specify that a certain behaviour should be invoked only
-if a certain condition is met. If the condition is not met, the
-alternative behvaiour (which is ``default`` by default) is executed.
+It allows you to specify that a certain behaviour should be invoked only if a certain condition is
+met. If the condition is not met, the alternative behvaiour (which is ``default`` by default) is
+executed.
 
 ``python import uncertainty as u DJANGO_UNCERTAINTY = u.conditional(u.is_post, u.server_error())``
 
-The specification above states that if the request uses the POST method,
-the site should respond with an Internal Server Error. If you want to
-specify an alternative behaviour other than the default, use the
-``alternative_behaviour`` argument:
+The specification above states that if the request uses the POST method, the site should respond
+with an Internal Server Error. If you want to specify an alternative behaviour other than the
+default, use the ``alternative_behaviour`` argument:
 
 ``python import uncertainty as u DJANGO_UNCERTAINTY = u.conditional(u.is_post, u.server_error(), alternative_behaviour=u.delay(u.default(), 0.3)``
 
@@ -259,8 +261,8 @@ Conditions can be combined using boolean operators. For instance,
     import uncertainty as u
     DJANGO_UNCERTAINTY = u.conditional(u.is_authenticated or not u.is_get, u.bad_request())
 
-specifies that if the request is authenticated or if it uses the GET
-method, a Bad Request response should be used.
+specifies that if the request is authenticated or if it uses the GET method, a Bad Request response
+should be used.
 
 In the next section, all the predefined conditions are presented.
 
@@ -272,20 +274,17 @@ An alias for ``conditional``.
 multi\_conditional
 ~~~~~~~~~~~~~~~~~~
 
-``multi_conditional`` takes a list of condition/behaviour pairs, and
-when a request is received, it iterates over the conditions until one is
-met, and the corresponding behaviour is invoked. If no condition is met,
-the default behaviour is invoked.
+``multi_conditional`` takes a list of condition/behaviour pairs, and when a request is received, it
+iterates over the conditions until one is met, and the corresponding behaviour is invoked. If no
+condition is met, the default behaviour is invoked.
 
 ``python import uncertainty as u DJANGO_UNCERTAINTY = u.multi_conditional([(u.is_get, u.delay(u.default(), 0.5), (u.is_post, u.server_error())])``
 
-The specification above states that if the request uses the GET method,
-it should be delayed by half a second, if it uses POST, it should
-respond with an Internal Server Error, and if neither of those
-conditions are met, the request should go through as usual.
+The specification above states that if the request uses the GET method, it should be delayed by
+half a second, if it uses POST, it should respond with an Internal Server Error, and if neither of
+those conditions are met, the request should go through as usual.
 
-The default behaviour to be used when no conditions are met can be
-specified with the ``default_behaviour`` argument:
+The default behaviour to be used when no conditions are met can be specified with the ``default_behaviour`` argument:
 
 ``python import uncertainty as u DJANGO_UNCERTAINTY = u.multi_conditional([(u.is_get, u.delay(u.default(), 0.5), (u.is_post, u.server_error())], default_behaviour=u.not_found())``
 
@@ -302,12 +301,10 @@ An alias for ``case``.
 Custom behaviours
 ~~~~~~~~~~~~~~~~~
 
-We've done our best to implement behaviours that make sense in the
-context of introducing uncertainty into a Django site, however, if you
-need to implement your own behaviours, all you need to do is derive the
-``Behaviour`` class. Let's say you want a Behaviour that adds a header
-to the response generated by another behaviour. Here's one possible
-implementation of such behaviour:
+We've done our best to implement behaviours that make sense in the context of introducing
+uncertainty into a Django site, however, if you need to implement your own behaviours, all you need
+to do is derive the ``Behaviour`` class. Let's say you want a Behaviour that adds a header to the
+response generated by another behaviour. Here's one possible implementation of such behaviour:
 
 .. code:: python
 
@@ -323,9 +320,8 @@ implementation of such behaviour:
 
             return response
 
-If you think that there's a use case that we haven't covered that might
-be useful for other users, feel free to create an issue on
-`GitHub <https://github.com/abarto/django_uncertainty>`__.
+If you think that there's a use case that we haven't covered that might be useful for other users,
+feel free to create an issue on `GitHub <https://github.com/abarto/django_uncertainty>`__.
 
 Conditions
 ----------
@@ -347,8 +343,8 @@ Conditions are subclasses of the ``Predicate`` class:
             """
             return True
 
-Whenever a conditional behaviour is used, the predicate is invoked with
-the same parameters that would be given the the behaviour.
+Whenever a conditional behaviour is used, the predicate is invoked with the same parameters that
+would be given the the behaviour.
 
 is\_method
 ~~~~~~~~~~
@@ -418,8 +414,7 @@ An alias for ``has_parameter``
 path\_is
 ~~~~~~~~
 
-The condition is met if the request path matches the given regular
-expression.
+The condition is met if the request path matches the given regular expression.
 
 .. code:: python
 
@@ -449,10 +444,9 @@ The condition is met if the authenticated user has the given username.
 Custom conditions
 ~~~~~~~~~~~~~~~~~
 
-As with behaviours, custom conditions are creating deriving the
-``Predicate`` class. Let's say you want a condition that checks the
-presence of a header in the request. Here's one possible implementation
-of such condition:
+As with behaviours, custom conditions are creating deriving the ``Predicate`` class. Let's say you
+want a condition that checks the presence of a header in the request. Here's one possible
+implementation of such condition:
 
 .. code:: python
 
@@ -466,6 +460,5 @@ of such condition:
 Feedback
 --------
 
-All feedback is appreciated, so if you found problems or have ides for
-new features, just create an issue on
-`GitHub <https://github.com/abarto/django_uncertainty>`_.
+All feedback is appreciated, so if you found problems or have ides for new features, just create an
+issue on `GitHub <https://github.com/abarto/django_uncertainty>`_.
