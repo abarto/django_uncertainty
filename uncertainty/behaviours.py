@@ -110,6 +110,18 @@ def server_error(*args, **kwargs):
     return HttpResponseBehaviour(HttpResponseServerError, *args, **kwargs)
 
 
+def not_found(*args, **kwargs):
+    """A Behaviour that returns an HttpResponse object overriding the actual response of the Django
+    stack with a 404 (Not found) status code. The function takes the same arguments as
+    HttpResponse, which allows changing the content, status, or any other feature exposed through
+    the constructor
+    :param args: Positional arguments for the HttpResponse constructor
+    :param kwargs: Named arguments for the HttpResponse constructor
+    :return: An HttpResponse overriding the Django stack response
+    """
+    return HttpResponseBehaviour(HttpResponse, status=404, *args, **kwargs)
+
+
 def status(status_code, *args, **kwargs):
     """A Behaviour that returns an HttpResponse object overriding the actual response of the Django
     stack with a specific status code. The function takes the same arguments as HttpResponse, which
