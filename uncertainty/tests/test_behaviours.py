@@ -2,7 +2,8 @@ from django.test import TestCase
 from unittest.mock import MagicMock, patch
 
 from uncertainty.behaviours import (Behaviour, default, HttpResponseBehaviour, html, ok,
-                                    bad_request, forbidden, not_allowed, server_error, not_found)
+                                    bad_request, forbidden, not_allowed, server_error, not_found,
+                                    status, json)
 
 
 class BehaviourTests(TestCase):
@@ -185,8 +186,49 @@ class NotFoundTests(HttpResponseBehaviourTestsBase):
                          not_found(*self.args_mock, **self.kwargs_mock))
 
 
-# TODO Add status tests
-# TODO Add json tests
+class StatusTests(HttpResponseBehaviourTestsBase):
+    def setUp(self):
+        super().setUp()
+        http_response_patcher = patch('uncertainty.behaviours.HttpResponse')
+        self.http_response_mock = http_response_patcher.start()
+        self.addCleanup(http_response_patcher.stop)
+        self.some_status = MagicMock()
+
+    def test_calls_http_response_behaviour(self):
+        """Tests that status calls HttpResponseBehaviour with HttpResponse"""
+        status(self.some_status, *self.args_mock, **self.kwargs_mock)
+        self.http_response_behaviour_mock.assert_called_once_with(self.http_response_mock,
+                                                                  status=self.some_status,
+                                                                  *self.args_mock,
+                                                                  **self.kwargs_mock)
+
+    def test_returns_http_response_behaviour_result(self):
+        """Tests that status returns the result of calling HttpResponseBehaviour constructor"""
+        self.assertEqual(self.http_response_behaviour_mock.return_value,
+                         status(self.some_status, *self.args_mock, **self.kwargs_mock))
+
+
+class JsonTests(HttpResponseBehaviourTestsBase):
+    def setUp(self):
+        super().setUp()
+        json_response_patcher = patch(
+            'uncertainty.behaviours.JsonResponse')
+        self.json_response_mock = json_response_patcher.start()
+        self.addCleanup(json_response_patcher.stop)
+        self.some_data = MagicMock()
+
+    def test_calls_http_response_behaviour(self):
+        """Tests that json calls HttpResponseBehaviour with JsonResponse"""
+        json(self.some_data, *self.args_mock, **self.kwargs_mock)
+        self.http_response_behaviour_mock.assert_called_once_with(
+            self.json_response_mock, self.some_data, *self.args_mock, **self.kwargs_mock)
+
+    def test_returns_http_response_behaviour_result(self):
+        """Tests that json returns the result of calling JsonResponse constructor"""
+        self.assertEqual(self.http_response_behaviour_mock.return_value,
+                         json(self.some_data, *self.args_mock, **self.kwargs_mock))
+
+
 # TODO Add DelayResponse tests
 # TODO Add DelayRequest tests
 # TODO Add RandomChoice tests
