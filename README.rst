@@ -31,7 +31,7 @@ GitHub and run setup.py:
 Once the package has been installed, you need to add the middleware to
 your Django settings file:
 
-.. code:: python
+::
 
     MIDDLEWARE = [
         'django.middleware.security.SecurityMiddleware',
@@ -256,6 +256,7 @@ with an Internal Server Error. If you want to specify an alternative behaviour o
 default, use the ``alternative_behaviour`` argument:
 
 ::
+
     import uncertainty as u
     DJANGO_UNCERTAINTY = u.conditional(u.is_post, u.server_error(), alternative_behaviour=u.delay(u.default(), 0.3)
 

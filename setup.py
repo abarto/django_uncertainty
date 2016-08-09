@@ -9,7 +9,7 @@ with open(path.join(path.abspath(path.dirname(__file__)), 'README.rst')) as f:
 
 
 setup(name='django_uncertainty',
-      version='1.3',
+      version='1.4',
       description='A Django middleware to generate predictable errors on sites',
       long_description=long_description,
       author='Agustin Barto',
@@ -17,7 +17,7 @@ setup(name='django_uncertainty',
       url='https://github.com/abarto/django_uncertainty',
       license='BSD',
       install_requires=[],
-      test_requires=['Django>=1.0'],
+      tests_require=['Django>=1.0'],
       test_suite='uncertainty.tests.runtests.runtests',
       classifiers=[
           'Development Status :: 4 - Beta',

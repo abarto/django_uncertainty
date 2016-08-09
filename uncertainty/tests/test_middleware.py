@@ -28,14 +28,14 @@ class UncertaintyMiddlewareTests(TestCase):
                          self.uncertainty_middleware(self.request_mock))
 
     @override_settings(DJANGO_UNCERTAINTY=None)
-    def test_calls_get_response_if_setting_is_missing(self):
+    def test_calls_get_response_if_setting_is_none(self):
         """Tests that the middleware calls the given get_response if the DJANGO_UNCERTAINTY setting
         is None"""
         self.uncertainty_middleware(self.request_mock)
         self.get_response_mock.assert_called_once_with(self.request_mock)
 
     @override_settings(DJANGO_UNCERTAINTY=None)
-    def test_returns_get_response_result_if_setting_is_missing(self):
+    def test_returns_get_response_result_if_setting_is_none(self):
         """Tests that the middleware returns the result of calling get_response if the
         DJANGO_UNCERTAINTY setting is None"""
         self.assertEqual(self.get_response_mock.return_value,

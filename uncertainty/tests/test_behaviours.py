@@ -1,7 +1,9 @@
 from django.test import TestCase
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
-from uncertainty.behaviours import Behaviour, default, HttpResponseBehaviour
+from uncertainty.behaviours import (Behaviour, default, HttpResponseBehaviour, html, ok,
+                                    bad_request, forbidden, not_allowed, server_error, not_found,
+                                    status, json)
 
 
 class BehaviourTests(TestCase):
@@ -47,14 +49,186 @@ class HttpResponseBehaviourTests(TestCase):
         self.assertEqual(self.response_class_mock.return_value,
                          self.behaviour(self.get_response_mock, self.request_mock))
 
-# TODO Add html tests
-# TODO Add bad_request tests
-# TODO Add forbidden tests
-# TODO Add not_allowed tests
-# TODO Add server_error tests
-# TODO Add not_found tests
-# TODO Add status tests
-# TODO Add json tests
+
+class HttpResponseBehaviourTestsBase(TestCase):
+    def setUp(self):
+        http_response_behaviour_patcher = patch('uncertainty.behaviours.HttpResponseBehaviour')
+        self.http_response_behaviour_mock = http_response_behaviour_patcher.start()
+        self.addCleanup(http_response_behaviour_patcher.stop)
+        self.args_mock = [MagicMock(), MagicMock()]
+        self.kwargs_mock = {'kwarg0': MagicMock(), 'kwarg1': MagicMock()}
+
+
+class HtmlTests(HttpResponseBehaviourTestsBase):
+    def setUp(self):
+        super().setUp()
+        http_response_patcher = patch('uncertainty.behaviours.HttpResponse')
+        self.http_response_mock = http_response_patcher.start()
+        self.addCleanup(http_response_patcher.stop)
+
+    def test_calls_http_response_behaviour(self):
+        """Tests that html calls HttpResponseBehaviour with HttpResponse"""
+        html(*self.args_mock, **self.kwargs_mock)
+        self.http_response_behaviour_mock.assert_called_once_with(self.http_response_mock,
+                                                                  *self.args_mock,
+                                                                  **self.kwargs_mock)
+
+    def test_returns_http_response_behaviour_result(self):
+        """Tests that html returns the result of calling HttpResponseBehaviour constructor"""
+        self.assertEqual(self.http_response_behaviour_mock.return_value,
+                         html(*self.args_mock, **self.kwargs_mock))
+
+    def test_ok_is_html(self):
+        """Test that ok is an alias for html"""
+        self.assertEqual(html, ok)
+
+
+class BadRequestTests(HttpResponseBehaviourTestsBase):
+        def setUp(self):
+            super().setUp()
+            http_response_bad_request_patcher = patch(
+                'uncertainty.behaviours.HttpResponseBadRequest')
+            self.http_response_bad_request_mock = http_response_bad_request_patcher.start()
+            self.addCleanup(http_response_bad_request_patcher.stop)
+
+        def test_calls_http_response_behaviour(self):
+            """Tests that bad_request calls HttpResponseBehaviour with HttpResponseBadRequest"""
+            bad_request(*self.args_mock, **self.kwargs_mock)
+            self.http_response_behaviour_mock.assert_called_once_with(
+                self.http_response_bad_request_mock, *self.args_mock, **self.kwargs_mock)
+
+        def test_returns_http_response_behaviour_result(self):
+            """Tests that bad_request returns the result of calling HttpResponseBehaviour
+            constructor"""
+            self.assertEqual(self.http_response_behaviour_mock.return_value,
+                             bad_request(*self.args_mock, **self.kwargs_mock))
+
+
+class ForbiddenTests(HttpResponseBehaviourTestsBase):
+    def setUp(self):
+        super().setUp()
+        http_response_forbidden_patcher = patch(
+            'uncertainty.behaviours.HttpResponseForbidden')
+        self.http_response_forbidden_mock = http_response_forbidden_patcher.start()
+        self.addCleanup(http_response_forbidden_patcher.stop)
+
+    def test_calls_http_response_behaviour(self):
+        """Tests that forbidden calls HttpResponseBehaviour with HttpResponseForbidden"""
+        forbidden(*self.args_mock, **self.kwargs_mock)
+        self.http_response_behaviour_mock.assert_called_once_with(
+            self.http_response_forbidden_mock, *self.args_mock, **self.kwargs_mock)
+
+    def test_returns_http_response_behaviour_result(self):
+        """Tests that forbidden returns the result of calling HttpResponseBehaviour constructor"""
+        self.assertEqual(self.http_response_behaviour_mock.return_value,
+                         forbidden(*self.args_mock, **self.kwargs_mock))
+
+
+class NotAllowedTests(HttpResponseBehaviourTestsBase):
+    def setUp(self):
+        super().setUp()
+        http_response_not_allowed_patcher = patch(
+            'uncertainty.behaviours.HttpResponseNotAllowed')
+        self.http_response_not_allowed_mock = http_response_not_allowed_patcher.start()
+        self.addCleanup(http_response_not_allowed_patcher.stop)
+
+    def test_calls_http_response_behaviour(self):
+        """Tests that not_allowed calls HttpResponseBehaviour with HttpResponseNotAllowed"""
+        not_allowed(*self.args_mock, **self.kwargs_mock)
+        self.http_response_behaviour_mock.assert_called_once_with(
+            self.http_response_not_allowed_mock, *self.args_mock, **self.kwargs_mock)
+
+    def test_returns_http_response_behaviour_result(self):
+        """Tests that not_allowed returns the result of calling HttpResponseBehaviour constructor"""
+        self.assertEqual(self.http_response_behaviour_mock.return_value,
+                         not_allowed(*self.args_mock, **self.kwargs_mock))
+
+
+class ServerErrorTests(HttpResponseBehaviourTestsBase):
+    def setUp(self):
+        super().setUp()
+        http_response_server_error_patcher = patch(
+            'uncertainty.behaviours.HttpResponseServerError')
+        self.http_response_server_error_mock = http_response_server_error_patcher.start()
+        self.addCleanup(http_response_server_error_patcher.stop)
+
+    def test_calls_http_response_behaviour(self):
+        """Tests that server_error calls HttpResponseBehaviour with HttpResponseNotAllowed"""
+        server_error(*self.args_mock, **self.kwargs_mock)
+        self.http_response_behaviour_mock.assert_called_once_with(
+            self.http_response_server_error_mock, *self.args_mock, **self.kwargs_mock)
+
+    def test_returns_http_response_behaviour_result(self):
+        """Tests that server_error returns the result of calling HttpResponseServerError
+        constructor"""
+        self.assertEqual(self.http_response_behaviour_mock.return_value,
+                         server_error(*self.args_mock, **self.kwargs_mock))
+
+
+class NotFoundTests(HttpResponseBehaviourTestsBase):
+    def setUp(self):
+        super().setUp()
+        http_response_patcher = patch('uncertainty.behaviours.HttpResponse')
+        self.http_response_mock = http_response_patcher.start()
+        self.addCleanup(http_response_patcher.stop)
+
+    def test_calls_http_response_behaviour(self):
+        """Tests that not_found calls HttpResponseBehaviour with HttpResponse"""
+        not_found(*self.args_mock, **self.kwargs_mock)
+        self.http_response_behaviour_mock.assert_called_once_with(self.http_response_mock,
+                                                                  status=404,
+                                                                  *self.args_mock,
+                                                                  **self.kwargs_mock)
+
+    def test_returns_http_response_behaviour_result(self):
+        """Tests that not_found returns the result of calling HttpResponseBehaviour constructor"""
+        self.assertEqual(self.http_response_behaviour_mock.return_value,
+                         not_found(*self.args_mock, **self.kwargs_mock))
+
+
+class StatusTests(HttpResponseBehaviourTestsBase):
+    def setUp(self):
+        super().setUp()
+        http_response_patcher = patch('uncertainty.behaviours.HttpResponse')
+        self.http_response_mock = http_response_patcher.start()
+        self.addCleanup(http_response_patcher.stop)
+        self.some_status = MagicMock()
+
+    def test_calls_http_response_behaviour(self):
+        """Tests that status calls HttpResponseBehaviour with HttpResponse"""
+        status(self.some_status, *self.args_mock, **self.kwargs_mock)
+        self.http_response_behaviour_mock.assert_called_once_with(self.http_response_mock,
+                                                                  status=self.some_status,
+                                                                  *self.args_mock,
+                                                                  **self.kwargs_mock)
+
+    def test_returns_http_response_behaviour_result(self):
+        """Tests that status returns the result of calling HttpResponseBehaviour constructor"""
+        self.assertEqual(self.http_response_behaviour_mock.return_value,
+                         status(self.some_status, *self.args_mock, **self.kwargs_mock))
+
+
+class JsonTests(HttpResponseBehaviourTestsBase):
+    def setUp(self):
+        super().setUp()
+        json_response_patcher = patch(
+            'uncertainty.behaviours.JsonResponse')
+        self.json_response_mock = json_response_patcher.start()
+        self.addCleanup(json_response_patcher.stop)
+        self.some_data = MagicMock()
+
+    def test_calls_http_response_behaviour(self):
+        """Tests that json calls HttpResponseBehaviour with JsonResponse"""
+        json(self.some_data, *self.args_mock, **self.kwargs_mock)
+        self.http_response_behaviour_mock.assert_called_once_with(
+            self.json_response_mock, self.some_data, *self.args_mock, **self.kwargs_mock)
+
+    def test_returns_http_response_behaviour_result(self):
+        """Tests that json returns the result of calling JsonResponse constructor"""
+        self.assertEqual(self.http_response_behaviour_mock.return_value,
+                         json(self.some_data, *self.args_mock, **self.kwargs_mock))
+
+
 # TODO Add DelayResponse tests
 # TODO Add DelayRequest tests
 # TODO Add RandomChoice tests
