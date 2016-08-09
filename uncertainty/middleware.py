@@ -22,7 +22,7 @@ class UncertaintyMiddleware(object):
         :return: The result of running the uncertainty specification if the DJANGO_UNCERTAINTY is
         present, or the default response if it's not.
         """
-        if hasattr(settings, 'DJANGO_UNCERTAINTY'):
+        if hasattr(settings, 'DJANGO_UNCERTAINTY') and settings.DJANGO_UNCERTAINTY is not None:
             return settings.DJANGO_UNCERTAINTY(self.get_response, request)
 
         return self.get_response(request)

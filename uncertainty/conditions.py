@@ -14,12 +14,11 @@ class Predicate:
         """
         return True
 
-    def __not__(self):
+    def __neg__(self):
         """The negation with another predicate
-        :param other: The other predicate
         :return: The negation of this predicate
         """
-        return OrPredicate(self)
+        return NotPredicate(self)
 
     def __or__(self, other):
         """The disjunction with another predicate
