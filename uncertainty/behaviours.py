@@ -146,7 +146,7 @@ def json(data, *args, **kwargs):
     return HttpResponseBehaviour(JsonResponse, data, *args, **kwargs)
 
 
-class DelayResponse(Behaviour):
+class DelayResponseBehaviour(Behaviour):
     def __init__(self, behaviour, seconds):
         """A Behaviour that delays the response to the client a given amount of seconds.
         :param behaviour: The behaviour to invoke before delaying its response
@@ -172,10 +172,10 @@ class DelayResponse(Behaviour):
                 'behaviour={behaviour}, '
                 'seconds={seconds})').format(behaviour=self._behaviour,
                                              seconds=self._seconds)
-delay = DelayResponse
+delay = DelayResponseBehaviour
 
 
-class DelayRequest(Behaviour):
+class DelayRequestBehaviour(Behaviour):
     def __init__(self, behaviour, seconds):
         """A Behaviour that delays the response to the client a given amount of seconds. It
         introduces the delay BEFORE invoking the encapsulated behaviour.
@@ -203,7 +203,7 @@ class DelayRequest(Behaviour):
                 'behaviour={behaviour}, '
                 'seconds={seconds})').format(behaviour=self._behaviour,
                                              seconds=self._seconds)
-delay_request = DelayRequest
+delay_request = DelayRequestBehaviour
 
 
 class RandomChoice(Behaviour):

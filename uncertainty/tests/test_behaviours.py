@@ -3,7 +3,8 @@ from unittest.mock import MagicMock, patch
 
 from uncertainty.behaviours import (Behaviour, default, HttpResponseBehaviour, html, ok,
                                     bad_request, forbidden, not_allowed, server_error, not_found,
-                                    status, json)
+                                    status, json, DelayResponseBehaviour, delay,
+                                    DelayRequestBehaviour, delay_request)
 
 
 class BehaviourTests(TestCase):
@@ -211,8 +212,7 @@ class StatusTests(HttpResponseBehaviourTestsBase):
 class JsonTests(HttpResponseBehaviourTestsBase):
     def setUp(self):
         super().setUp()
-        json_response_patcher = patch(
-            'uncertainty.behaviours.JsonResponse')
+        json_response_patcher = patch('uncertainty.behaviours.JsonResponse')
         self.json_response_mock = json_response_patcher.start()
         self.addCleanup(json_response_patcher.stop)
         self.some_data = MagicMock()
@@ -229,8 +229,72 @@ class JsonTests(HttpResponseBehaviourTestsBase):
                          json(self.some_data, *self.args_mock, **self.kwargs_mock))
 
 
-# TODO Add DelayResponse tests
-# TODO Add DelayRequest tests
+class DelayResponseBehaviourTests(TestCase):
+    def setUp(self):
+        sleep_patcher = patch('uncertainty.behaviours.sleep')
+        self.sleep_mock = sleep_patcher.start()
+        self.addCleanup(self.sleep_mock.stop)
+        self.get_response_mock = MagicMock()
+        self.request_mock = MagicMock()
+        self.some_behaviour = MagicMock()
+        self.some_seconds = MagicMock()
+        self.delay_response_behaviour = DelayResponseBehaviour(self.some_behaviour,
+                                                               self.some_seconds)
+
+    def test_calls_encapsulated_behaviour(self):
+        """Tests that DelayResponseBehaviour calls the encapsulated behaviour"""
+        self.delay_response_behaviour(self.get_response_mock, self.request_mock)
+        self.some_behaviour.assert_called_once_with(self.get_response_mock, self.request_mock)
+
+    def test_returns_result_of_encapsulated_behaviour(self):
+        """Tests that DelayResponseBehaviour returns the result of calling the encapsulated
+        behaviour"""
+        self.assertEqual(self.some_behaviour.return_value,
+                         self.delay_response_behaviour(self.get_response_mock, self.request_mock))
+
+    def test_calls_sleep(self):
+        """Tests that DelayResponseBehaviour calls sleep for the given seconds"""
+        self.delay_response_behaviour(self.get_response_mock, self.request_mock)
+        self.sleep_mock.assert_called_once_with(self.some_seconds)
+
+    def test_delay_is_delay_response_behaviour(self):
+        """Tests that delay is an alias for DelayResponseBehaviour"""
+        self.assertEqual(delay, DelayResponseBehaviour)
+
+
+class DelayRequestBehaviourTests(TestCase):
+    def setUp(self):
+        sleep_patcher = patch('uncertainty.behaviours.sleep')
+        self.sleep_mock = sleep_patcher.start()
+        self.addCleanup(self.sleep_mock.stop)
+        self.get_response_mock = MagicMock()
+        self.request_mock = MagicMock()
+        self.some_behaviour = MagicMock()
+        self.some_seconds = MagicMock()
+        self.delay_request_behaviour = DelayRequestBehaviour(self.some_behaviour,
+                                                             self.some_seconds)
+
+    def test_calls_encapsulated_behaviour(self):
+        """Tests that DelayResponseBehaviour calls the encapsulated behaviour"""
+        self.delay_request_behaviour(self.get_response_mock, self.request_mock)
+        self.some_behaviour.assert_called_once_with(self.get_response_mock, self.request_mock)
+
+    def test_returns_result_of_encapsulated_behaviour(self):
+        """Tests that DelayResponseBehaviour returns the result of calling the encapsulated
+        behaviour"""
+        self.assertEqual(self.some_behaviour.return_value,
+                         self.delay_request_behaviour(self.get_response_mock,
+                                                      self.request_mock))
+
+    def test_calls_sleep(self):
+        """Tests that DelayResponseBehaviour calls sleep for the given seconds"""
+        self.delay_request_behaviour(self.get_response_mock, self.request_mock)
+        self.sleep_mock.assert_called_once_with(self.some_seconds)
+
+    def test_delay_is_delay_request_response_behaviour(self):
+        """Tests that delay is an alias for DelayResponseBehaviour"""
+        self.assertEqual(delay_request, DelayRequestBehaviour)
+
 # TODO Add RandomChoice tests
 # TODO Add ConditionalBehaviour tests
 # TODO Add MultiConditionalBehaviour tests
