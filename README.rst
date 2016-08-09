@@ -44,7 +44,7 @@ Usage
 
 The middleware behaviour is controlled by the ``DJANGO_UNCERTAINTY`` Django setting. For example:
 
-.. code:: python
+::
 
     import uncertainty as u
     DJANGO_UNCERTAINTY = u.cond(
@@ -63,7 +63,7 @@ Behaviours
 All behaviours are implemented as sub-classes of the ``Behaviour``
 class:
 
-.. code:: python
+::
 
     class Behaviour:
         """Base of all behaviours. It is also the default implementation which just just returns the
@@ -89,7 +89,7 @@ As the name implies, this is the default behaviour. It just makes the requests c
 through the Django stack. Using ``default`` is the same as omitting the ``DJANGO_UNCERTAINTY``
 setting altogether.
 
-.. code:: python
+::
 
     import uncertainty as u
     DJANGO_UNCERTAINTY = u.default()
@@ -101,7 +101,7 @@ Overrides the site's response with an arbitrary HTTP response. Without any argum
 response with status code 200 (Ok). ``html`` takes the same arguments as Django's
 `HttpResponse <https://docs.djangoproject.com/en/1.10/ref/request-response/#django.http.HttpResponse>`_.
 
-.. code:: python
+::
 
     import uncertainty as u
     DJANGO_UNCERTAINTY = u.html('<html><head></head><body><h1>Hello World!</h1></body></html>')
@@ -118,7 +118,7 @@ Overrides the site's response with an HTTP response with status code 400 (Bad Re
 ``bad_request`` takes the same arguments as Django's
 `HttpResponseBadRequest <https://docs.djangoproject.com/en/1.10/ref/request-response/#django.http.HttpResponseBadRequest>`_.
 
-.. code:: python
+::
 
     import uncertainty as u
     DJANGO_UNCERTAINTY = u.bad_request('<html><head></head><body>Oops!</body></html>')
@@ -130,7 +130,7 @@ Overrides the site's response with an HTTP response with status code 403 (Forbid
 takes the same arguments as Django's
 `HttpResponseForbidden <https://docs.djangoproject.com/en/1.10/ref/request-response/#django.http.HttpResponseForbidden>`_.
 
-.. code:: python
+::
 
     import uncertainty as u
     DJANGO_UNCERTAINTY = u.forbidden('<html><head></head><body>NOPE</body></html>')
@@ -142,7 +142,7 @@ Overrides the site's response with an HTTP response with status code 405 (Not Al
 ``not_allowed`` takes the same arguments as Django's
 `HttpResponseNotAllowed <https://docs.djangoproject.com/en/1.10/ref/request-response/#django.http.HttpResponseNotAllowed>`_.
 
-.. code:: python
+::
 
     import uncertainty as u
     DJANGO_UNCERTAINTY = u.not_allowed(permitted_methods=['PUT'], content='<html><head></head><body>NOPE</body></html>')
@@ -154,7 +154,7 @@ Overrides the site's response with an HTTP response with status code 404 (Not Fo
 ``not_found`` takes the same arguments as Django's
 `HttpResponse <https://docs.djangoproject.com/en/1.10/ref/request-response/#django.http.HttpResponse>`_.
 
-.. code:: python
+::
 
     import uncertainty as u
     DJANGO_UNCERTAINTY = u.not_found(permitted_methods=['PUT'], content='<html><head></head><body>Who?</body></html>')
@@ -166,7 +166,7 @@ Overrides the site's response with an HTTP response with status code 500 (Intern
 ``server_error`` takes the same arguments as Django's
 `HttpResponseServerError <https://docs.djangoproject.com/en/1.10/ref/request-response/#django.http.HttpResponseServerError>`_.
 
-.. code:: python
+::
 
     import uncertainty as u
     DJANGO_UNCERTAINTY = u.server_error('<html><head></head><body>BOOM</body></html>')
@@ -176,7 +176,7 @@ status
 
 Overrides the site's response with an HTTP response with a given status code.
 
-.. code:: python
+::
 
     import uncertainty as u
     DJANGO_UNCERTAINTY = u.status(201, content='<html><head></head><body><h1>Created</h1></body></html>')
@@ -189,7 +189,7 @@ Overrides the site's response with an arbitrary HTTP response with content type
 ``json`` takes the same arguments as Django's
 `JsonResponse <https://docs.djangoproject.com/en/1.10/ref/request-response/#jsonresponse-objects>`_.
 
-.. code:: python
+::
 
     import uncertainty as u
     DJANGO_UNCERTAINTY = u.json({'foo': 1, 'bar': True})
@@ -200,7 +200,7 @@ delay
 Introduces a delay after invoking another behaviour. For example, this specifies a delay of half a
 second into the actual site responses:
 
-.. code:: python
+::
 
     import uncertainty as u
     DJANGO_UNCERTAINTY = u.delay(u.default(), 0.5)
@@ -223,7 +223,7 @@ For example, let's say we want 30% of the request to be responded with an Intern
 response, 20% with a Bad Request response, and the rest with the actual response but with a 1
 second delay. This can be specified as follows:
 
-.. code:: python
+::
 
     import uncertainty as u
     DJANGO_UNCERTAINTY = u.random_choice([(u.server_error(), 0.3), (u.bad_request(), 0.2), u.delay(u.default(), 1)])
@@ -231,7 +231,7 @@ second delay. This can be specified as follows:
 If proportions are specified, the total sum of them must be less than 1. If no proportions are
 specified, the behaviours are chosen with an even chance between them:
 
-.. code:: python
+::
 
     import uncertainty as u
     DJANGO_UNCERTAINTY = u.random_choice([u.server_error(), u.default()])
@@ -246,20 +246,25 @@ It allows you to specify that a certain behaviour should be invoked only if a ce
 met. If the condition is not met, the alternative behvaiour (which is ``default`` by default) is
 executed.
 
-``python import uncertainty as u DJANGO_UNCERTAINTY = u.conditional(u.is_post, u.server_error())``
+::
+
+    import uncertainty as u
+    DJANGO_UNCERTAINTY = u.conditional(u.is_post, u.server_error())
 
 The specification above states that if the request uses the POST method, the site should respond
 with an Internal Server Error. If you want to specify an alternative behaviour other than the
 default, use the ``alternative_behaviour`` argument:
 
-``python import uncertainty as u DJANGO_UNCERTAINTY = u.conditional(u.is_post, u.server_error(), alternative_behaviour=u.delay(u.default(), 0.3)``
+::
+    import uncertainty as u
+    DJANGO_UNCERTAINTY = u.conditional(u.is_post, u.server_error(), alternative_behaviour=u.delay(u.default(), 0.3)
 
 Conditions can be combined using boolean operators. For instance,
 
-.. code:: python
+::
 
     import uncertainty as u
-    DJANGO_UNCERTAINTY = u.conditional(u.is_authenticated or not u.is_get, u.bad_request())
+    DJANGO_UNCERTAINTY = u.conditional(u.is_authenticated | -u.is_get, u.bad_request())
 
 specifies that if the request is authenticated or if it uses the GET method, a Bad Request response
 should be used.
@@ -278,7 +283,10 @@ multi\_conditional
 iterates over the conditions until one is met, and the corresponding behaviour is invoked. If no
 condition is met, the default behaviour is invoked.
 
-``python import uncertainty as u DJANGO_UNCERTAINTY = u.multi_conditional([(u.is_get, u.delay(u.default(), 0.5), (u.is_post, u.server_error())])``
+::
+
+    import uncertainty as u
+    DJANGO_UNCERTAINTY = u.multi_conditional([(u.is_get, u.delay(u.default(), 0.5), (u.is_post, u.server_error())])
 
 The specification above states that if the request uses the GET method, it should be delayed by
 half a second, if it uses POST, it should respond with an Internal Server Error, and if neither of
@@ -286,7 +294,14 @@ those conditions are met, the request should go through as usual.
 
 The default behaviour to be used when no conditions are met can be specified with the ``default_behaviour`` argument:
 
-``python import uncertainty as u DJANGO_UNCERTAINTY = u.multi_conditional([(u.is_get, u.delay(u.default(), 0.5), (u.is_post, u.server_error())], default_behaviour=u.not_found())``
+::
+
+    import uncertainty as u
+    DJANGO_UNCERTAINTY = u.multi_conditional(
+        [
+            (u.is_get, u.delay(u.default(), 0.5),
+            (u.is_post, u.server_error())
+        ], default_behaviour=u.not_found())
 
 multi\_cond
 ~~~~~~~~~~~
@@ -306,7 +321,7 @@ uncertainty into a Django site, however, if you need to implement your own behav
 to do is derive the ``Behaviour`` class. Let's say you want a Behaviour that adds a header to the
 response generated by another behaviour. Here's one possible implementation of such behaviour:
 
-.. code:: python
+::
 
     class AddHeaderBehaviour(Behaviour):
         def __init__(self, behaviour, header_name, header_value):
@@ -328,7 +343,7 @@ Conditions
 
 Conditions are subclasses of the ``Predicate`` class:
 
-.. code:: python
+::
 
     class Predicate:
         """Represents a condition that a Django request must meet. It is used in conjunction with
@@ -351,7 +366,7 @@ is\_method
 
 The condition is met if the request uses the specified method.
 
-.. code:: python
+::
 
     import uncertainty as u
     DJANGO_UNCERTAINTY = u.cond(u.is_method('PATCH'), u.not_allowed())
@@ -361,7 +376,7 @@ is\_get
 
 The condition is met if the request uses the GET HTTP method.
 
-.. code:: python
+::
 
     import uncertainty as u
     DJANGO_UNCERTAINTY = u.cond(u.is_get, u.not_allowed())
@@ -371,7 +386,7 @@ is\_delete
 
 The condition is met if the request uses the DELETE HTTP method.
 
-.. code:: python
+::
 
     import uncertainty as u
     DJANGO_UNCERTAINTY = u.cond(u.is_delete, u.not_allowed())
@@ -381,7 +396,7 @@ is\_post
 
 The condition is met if the request uses the POST HTTP method.
 
-.. code:: python
+::
 
     import uncertainty as u
     DJANGO_UNCERTAINTY = u.cond(u.is_post, u.not_allowed())
@@ -391,7 +406,7 @@ is\_put
 
 The condition is met if the request uses the PUT HTTP method.
 
-.. code:: python
+::
 
     import uncertainty as u
     DJANGO_UNCERTAINTY = u.cond(u.is_put, u.not_allowed())
@@ -401,7 +416,7 @@ has\_parameter
 
 The condition is met if the request has the given parameter.
 
-.. code:: python
+::
 
     import uncertainty as u
     DJANGO_UNCERTAINTY = u.cond(u.has_parameter('q'), u.server_error())
@@ -416,7 +431,7 @@ path\_is
 
 The condition is met if the request path matches the given regular expression.
 
-.. code:: python
+::
 
     import uncertainty as u
     DJANGO_UNCERTAINTY = u.cond(u.path_is('^/api'), u.delay(u.default(), 0.2))
@@ -426,7 +441,7 @@ is\_authenticated
 
 The condition is met if the user has authenticated itself.
 
-.. code:: python
+::
 
     import uncertainty as u
     DJANGO_UNCERTAINTY = u.cond(u.is_authenticated, u.not_found())
@@ -436,7 +451,7 @@ user\_is
 
 The condition is met if the authenticated user has the given username.
 
-.. code:: python
+::
 
     import uncertainty as u
     DJANGO_UNCERTAINTY = u.cond(u.user_is('admin', u.forbidden())
@@ -448,7 +463,7 @@ As with behaviours, custom conditions are creating deriving the ``Predicate`` cl
 want a condition that checks the presence of a header in the request. Here's one possible
 implementation of such condition:
 
-.. code:: python
+::
 
     class HasHeaderPredicate(Predicate):
         def __index__(self, header_name):
