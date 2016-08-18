@@ -17,7 +17,7 @@ setup(name='django_uncertainty',
       url='https://github.com/abarto/django_uncertainty',
       license='BSD',
       install_requires=[],
-      tests_require=['Django>=1.1git0'],
+      tests_require=['Django>=1.10'],
       test_suite='uncertainty.tests.runtests.runtests',
       classifiers=[
           'Development Status :: 4 - Beta',
