@@ -9,7 +9,7 @@ with open(path.join(path.abspath(path.dirname(__file__)), 'README.rst')) as f:
 
 
 setup(name='django_uncertainty',
-      version='1.4',
+      version='1.5',
       description='A Django middleware to generate predictable errors on sites',
       long_description=long_description,
       author='Agustin Barto',
