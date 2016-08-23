@@ -206,19 +206,19 @@ class DelayRequestBehaviour(Behaviour):
 delay_request = DelayRequestBehaviour
 
 
-class RandomChoice(Behaviour):
+class RandomChoiceBehaviour(Behaviour):
     def __init__(self, behaviours):
         """A behaviour that chooses randomly amongst the encapsulated behaviours. It is possible to
         specify different proportions between the behaviours. For instance, to specify a 50 percent
         of "Not Found" responses, 30 percent of "Server Error" responses and 20 percent of actual
         (that go through the Django stack) responses, you should use the following:
 
-        RandomChoice([(not_found(), 0.5), (server_error(), 0.3), default())])
+        RandomChoiceBehaviour([(not_found(), 0.5), (server_error(), 0.3), default())])
 
         If you just want a random choice between several behaviours, you can omit the proportion
         specification:
 
-        RandomChoice([not_found, server_error, default])
+        RandomChoiceBehaviour([not_found, server_error, default])
 
         :param behaviours: A sequence of Behaviour objects or tuples of a Behaviour object and a
         number less than 1 representing the proportion of requests that are going to exhibit that
@@ -263,10 +263,10 @@ class RandomChoice(Behaviour):
         return _default(get_response, request)
 
     def __str__(self):
-        return ('RandomChoice('
+        return ('RandomChoiceBehaviour('
                 'behaviours=[{behaviours}])').format(
                     behaviours=', '.join(b for b in self._behaviours))
-random_choice = RandomChoice
+random_choice = RandomChoiceBehaviour
 
 
 class ConditionalBehaviour(Behaviour):
