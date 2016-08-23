@@ -3,7 +3,8 @@ from unittest.mock import MagicMock, patch
 
 from uncertainty.behaviours import (Behaviour, default, HttpResponseBehaviour, html, ok,
                                     bad_request, forbidden, not_allowed, server_error, not_found,
-                                    status, json)
+                                    status, json, DelayResponseBehaviour, delay,
+                                    DelayRequestBehaviour, delay_request, RandomChoiceBehaviour)
 
 
 class BehaviourTests(TestCase):
@@ -211,8 +212,7 @@ class StatusTests(HttpResponseBehaviourTestsBase):
 class JsonTests(HttpResponseBehaviourTestsBase):
     def setUp(self):
         super().setUp()
-        json_response_patcher = patch(
-            'uncertainty.behaviours.JsonResponse')
+        json_response_patcher = patch('uncertainty.behaviours.JsonResponse')
         self.json_response_mock = json_response_patcher.start()
         self.addCleanup(json_response_patcher.stop)
         self.some_data = MagicMock()
@@ -229,8 +229,180 @@ class JsonTests(HttpResponseBehaviourTestsBase):
                          json(self.some_data, *self.args_mock, **self.kwargs_mock))
 
 
-# TODO Add DelayResponse tests
-# TODO Add DelayRequest tests
-# TODO Add RandomChoice tests
+class DelayResponseBehaviourTests(TestCase):
+    def setUp(self):
+        sleep_patcher = patch('uncertainty.behaviours.sleep')
+        self.sleep_mock = sleep_patcher.start()
+        self.addCleanup(self.sleep_mock.stop)
+        self.get_response_mock = MagicMock()
+        self.request_mock = MagicMock()
+        self.some_behaviour = MagicMock()
+        self.some_seconds = MagicMock()
+        self.delay_response_behaviour = DelayResponseBehaviour(self.some_behaviour,
+                                                               self.some_seconds)
+
+    def test_calls_encapsulated_behaviour(self):
+        """Tests that DelayResponseBehaviour calls the encapsulated behaviour"""
+        self.delay_response_behaviour(self.get_response_mock, self.request_mock)
+        self.some_behaviour.assert_called_once_with(self.get_response_mock, self.request_mock)
+
+    def test_returns_result_of_encapsulated_behaviour(self):
+        """Tests that DelayResponseBehaviour returns the result of calling the encapsulated
+        behaviour"""
+        self.assertEqual(self.some_behaviour.return_value,
+                         self.delay_response_behaviour(self.get_response_mock, self.request_mock))
+
+    def test_calls_sleep(self):
+        """Tests that DelayResponseBehaviour calls sleep for the given seconds"""
+        self.delay_response_behaviour(self.get_response_mock, self.request_mock)
+        self.sleep_mock.assert_called_once_with(self.some_seconds)
+
+    def test_delay_is_delay_response_behaviour(self):
+        """Tests that delay is an alias for DelayResponseBehaviour"""
+        self.assertEqual(delay, DelayResponseBehaviour)
+
+
+class DelayRequestBehaviourTests(TestCase):
+    def setUp(self):
+        sleep_patcher = patch('uncertainty.behaviours.sleep')
+        self.sleep_mock = sleep_patcher.start()
+        self.addCleanup(self.sleep_mock.stop)
+        self.get_response_mock = MagicMock()
+        self.request_mock = MagicMock()
+        self.some_behaviour = MagicMock()
+        self.some_seconds = MagicMock()
+        self.delay_request_behaviour = DelayRequestBehaviour(self.some_behaviour,
+                                                             self.some_seconds)
+
+    def test_calls_encapsulated_behaviour(self):
+        """Tests that DelayResponseBehaviour calls the encapsulated behaviour"""
+        self.delay_request_behaviour(self.get_response_mock, self.request_mock)
+        self.some_behaviour.assert_called_once_with(self.get_response_mock, self.request_mock)
+
+    def test_returns_result_of_encapsulated_behaviour(self):
+        """Tests that DelayResponseBehaviour returns the result of calling the encapsulated
+        behaviour"""
+        self.assertEqual(self.some_behaviour.return_value,
+                         self.delay_request_behaviour(self.get_response_mock,
+                                                      self.request_mock))
+
+    def test_calls_sleep(self):
+        """Tests that DelayResponseBehaviour calls sleep for the given seconds"""
+        self.delay_request_behaviour(self.get_response_mock, self.request_mock)
+        self.sleep_mock.assert_called_once_with(self.some_seconds)
+
+    def test_delay_is_delay_request_response_behaviour(self):
+        """Tests that delay is an alias for DelayResponseBehaviour"""
+        self.assertEqual(delay_request, DelayRequestBehaviour)
+
+
+class RandomChoiceBehaviourInitTests(TestCase):
+    def setUp(self):
+        self.behaviour_0 = MagicMock()
+        self.behaviour_1 = MagicMock()
+        self.behaviour_2 = MagicMock()
+
+    def test_value_error_raised_on_proportions_sum_over_1(self):
+        """Tests that if the sum of the specified proportions is greater than 1, a ValueError
+        exception is raised"""
+        self.assertRaises(ValueError, RandomChoiceBehaviour,
+                          ((self.behaviour_0, 0.5), (self.behaviour_0, 0.6)))
+        self.assertRaises(ValueError, RandomChoiceBehaviour, ((self.behaviour_0, 1.2),))
+
+    def test_behaviours_with_no_proportions_evenly_distributed(self):
+        """Tests that behaviours with no proportions are evenly distributed"""
+        random_choice = RandomChoiceBehaviour((self.behaviour_0, self.behaviour_1))
+        self.assertEqual(0.5, random_choice._behaviours[0][1])
+        self.assertEqual(1.0, random_choice._behaviours[1][1])
+
+    def test_behaviours_with_no_proportions_evenly_distributes_rest(self):
+        """Tests that if there are behaviours with proportions and behaviours with no proportions,
+        the latter are evenly distributed"""
+        random_choice = RandomChoiceBehaviour(((self.behaviour_0, 0.5), self.behaviour_1,
+                                               self.behaviour_2))
+        self.assertEqual(0.5, random_choice._behaviours[0][1])
+        self.assertEqual(0.75, random_choice._behaviours[1][1])
+        self.assertEqual(1.0, random_choice._behaviours[2][1])
+
+    def test_proportions_are_accumulated(self):
+        """Tests that proportions accumulate in a CDF fashion"""
+        random_choice = RandomChoiceBehaviour(((self.behaviour_0, 0.3), (self.behaviour_1, 0.2),
+                                               (self.behaviour_2, 0.1)))
+        self.assertTupleEqual((self.behaviour_0, 0.3), random_choice._behaviours[0])
+        self.assertTupleEqual((self.behaviour_1, 0.5), random_choice._behaviours[1])
+        self.assertTupleEqual((self.behaviour_2, 0.6), random_choice._behaviours[2])
+
+
+class RandomChoiceBehaviourTests(TestCase):
+    def setUp(self):
+        random_patcher = patch('uncertainty.behaviours.random')
+        self.random_mock = random_patcher.start()
+        self.addCleanup(self.random_mock.stop)
+        default_patcher = patch('uncertainty.behaviours._default')
+        self.default_mock = default_patcher.start()
+        self.addCleanup(self.default_mock.stop)
+
+        self.get_response_mock = MagicMock()
+        self.request_mock = MagicMock()
+
+        self.behaviour_0 = MagicMock()
+        self.behaviour_1 = MagicMock()
+        self.behaviour_2 = MagicMock()
+        self.behaviour_0_prop = (self.behaviour_0, 0.2)
+        self.behaviour_1_prop = (self.behaviour_1, 0.3)
+        self.behaviour_2_prop = (self.behaviour_2, 0.1)
+
+        self.random_choice = RandomChoiceBehaviour(
+            (self.behaviour_0_prop, self.behaviour_1_prop, self.behaviour_2_prop))
+
+    def test_behaviour_0_invoked_if_random_is_zero(self):
+        """Tests that if the random number is 0, behaviour_0 is invoked"""
+        self.random_mock.return_value = 0
+        self.random_choice(self.get_response_mock, self.request_mock)
+        self.behaviour_0.assert_called_once_with(self.get_response_mock, self.request_mock)
+
+    def test_behaviour_0_invoked_if_random_less_than_0_2(self):
+        """Tests that if the random number is less than 0.2, behaviour_0 is invoked"""
+        self.random_mock.return_value = 0.1
+        self.random_choice(self.get_response_mock, self.request_mock)
+        self.behaviour_0.assert_called_once_with(self.get_response_mock, self.request_mock)
+
+    def test_behaviour_1_invoked_if_random_is_0_2(self):
+        """Tests that if the random number is exactly 0.2, behaviour_1 is invoked"""
+        self.random_mock.return_value = 0.2
+        self.random_choice(self.get_response_mock, self.request_mock)
+        self.behaviour_1.assert_called_once_with(self.get_response_mock, self.request_mock)
+
+    def test_behaviour_1_invoked_if_random_less_than_0_5(self):
+        """Tests that if the random number is less than 0.5, behaviour_1 is invoked"""
+        self.random_mock.return_value = 0.45
+        self.random_choice(self.get_response_mock, self.request_mock)
+        self.behaviour_1.assert_called_once_with(self.get_response_mock, self.request_mock)
+
+    def test_behaviour_2_invoked_if_random_is_0_5(self):
+        """Tests that if the random number is exactly 0.5, behaviour_2 is invoked"""
+        self.random_mock.return_value = 0.5
+        self.random_choice(self.get_response_mock, self.request_mock)
+        self.behaviour_2.assert_called_once_with(self.get_response_mock, self.request_mock)
+
+    def test_behaviour_2_invoked_if_random_less_than_0_6(self):
+        """Tests that if the random number is less than 0.6, behaviour_2 is invoked"""
+        self.random_mock.return_value = 0.57
+        self.random_choice(self.get_response_mock, self.request_mock)
+        self.behaviour_2.assert_called_once_with(self.get_response_mock, self.request_mock)
+
+    def test_default_invoked_if_random_is_0_6(self):
+        """Tests that if the random number is exactly 0.6, the default behaviour is invoked"""
+        self.random_mock.return_value = 0.6
+        self.random_choice(self.get_response_mock, self.request_mock)
+        self.default_mock.assert_called_once_with(self.get_response_mock, self.request_mock)
+
+    def test_default_invoked_if_random_greater_than_0_6(self):
+        """Tests that if the random number is greater than 0.6, the default behaviour is invoked"""
+        self.random_mock.return_value = 0.7
+        self.random_choice(self.get_response_mock, self.request_mock)
+        self.default_mock.assert_called_once_with(self.get_response_mock, self.request_mock)
+
+
 # TODO Add ConditionalBehaviour tests
 # TODO Add MultiConditionalBehaviour tests

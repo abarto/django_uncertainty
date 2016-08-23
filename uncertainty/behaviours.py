@@ -146,7 +146,7 @@ def json(data, *args, **kwargs):
     return HttpResponseBehaviour(JsonResponse, data, *args, **kwargs)
 
 
-class DelayResponse(Behaviour):
+class DelayResponseBehaviour(Behaviour):
     def __init__(self, behaviour, seconds):
         """A Behaviour that delays the response to the client a given amount of seconds.
         :param behaviour: The behaviour to invoke before delaying its response
@@ -172,10 +172,10 @@ class DelayResponse(Behaviour):
                 'behaviour={behaviour}, '
                 'seconds={seconds})').format(behaviour=self._behaviour,
                                              seconds=self._seconds)
-delay = DelayResponse
+delay = DelayResponseBehaviour
 
 
-class DelayRequest(Behaviour):
+class DelayRequestBehaviour(Behaviour):
     def __init__(self, behaviour, seconds):
         """A Behaviour that delays the response to the client a given amount of seconds. It
         introduces the delay BEFORE invoking the encapsulated behaviour.
@@ -203,22 +203,22 @@ class DelayRequest(Behaviour):
                 'behaviour={behaviour}, '
                 'seconds={seconds})').format(behaviour=self._behaviour,
                                              seconds=self._seconds)
-delay_request = DelayRequest
+delay_request = DelayRequestBehaviour
 
 
-class RandomChoice(Behaviour):
+class RandomChoiceBehaviour(Behaviour):
     def __init__(self, behaviours):
         """A behaviour that chooses randomly amongst the encapsulated behaviours. It is possible to
         specify different proportions between the behaviours. For instance, to specify a 50 percent
         of "Not Found" responses, 30 percent of "Server Error" responses and 20 percent of actual
         (that go through the Django stack) responses, you should use the following:
 
-        RandomChoice([(not_found(), 0.5), (server_error(), 0.3), default())])
+        RandomChoiceBehaviour([(not_found(), 0.5), (server_error(), 0.3), default())])
 
         If you just want a random choice between several behaviours, you can omit the proportion
         specification:
 
-        RandomChoice([not_found, server_error, default])
+        RandomChoiceBehaviour([not_found, server_error, default])
 
         :param behaviours: A sequence of Behaviour objects or tuples of a Behaviour object and a
         number less than 1 representing the proportion of requests that are going to exhibit that
@@ -263,10 +263,10 @@ class RandomChoice(Behaviour):
         return _default(get_response, request)
 
     def __str__(self):
-        return ('RandomChoice('
+        return ('RandomChoiceBehaviour('
                 'behaviours=[{behaviours}])').format(
                     behaviours=', '.join(b for b in self._behaviours))
-random_choice = RandomChoice
+random_choice = RandomChoiceBehaviour
 
 
 class ConditionalBehaviour(Behaviour):
