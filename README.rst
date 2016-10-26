@@ -307,12 +307,12 @@ The default behaviour to be used when no conditions are met can be specified wit
 multi\_cond
 ~~~~~~~~~~~
 
-An alias for ``cond``.
+An alias for ``multi_conditional``.
 
 case
 ~~~~
 
-An alias for ``case``.
+An alias for ``multi_conditional``.
 
 Custom behaviours
 ~~~~~~~~~~~~~~~~~
