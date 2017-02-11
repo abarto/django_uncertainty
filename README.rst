@@ -48,7 +48,7 @@ The middleware behaviour is controlled by the ``DJANGO_UNCERTAINTY`` Django sett
 
     import uncertainty as u
     DJANGO_UNCERTAINTY = u.cond(
-        u.path_is('^/api'), u.random_choice([
+        u.path_matches('^/api'), u.random_choice([
             (u.delay(u.default(), 5), 0.3), (u.server_error(), 0.2)]))
 
 This tells the middleware that if the request path starts with "/api", 30% of the time the request
@@ -427,7 +427,7 @@ has\_param
 
 An alias for ``has_parameter``
 
-path\_is
+path\_matches
 ~~~~~~~~
 
 The condition is met if the request path matches the given regular expression.
@@ -435,7 +435,7 @@ The condition is met if the request path matches the given regular expression.
 ::
 
     import uncertainty as u
-    DJANGO_UNCERTAINTY = u.cond(u.path_is('^/api'), u.delay(u.default(), 0.2))
+    DJANGO_UNCERTAINTY = u.cond(u.path_matches('^/api'), u.delay(u.default(), 0.2))
 
 is\_authenticated
 ~~~~~~~~~~~~~~~~~

@@ -14,5 +14,6 @@ def runtests():
     failures = test_runner.run_tests([], verbosity=1, interactive=True)
     sys.exit(bool(failures))
 
+
 if __name__ == '__main__':
     runtests()
