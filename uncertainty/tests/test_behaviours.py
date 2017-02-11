@@ -4,7 +4,8 @@ from unittest.mock import MagicMock, patch
 from uncertainty.behaviours import (Behaviour, default, HttpResponseBehaviour, html, ok,
                                     bad_request, forbidden, not_allowed, server_error, not_found,
                                     status, json, DelayResponseBehaviour, delay,
-                                    DelayRequestBehaviour, delay_request, RandomChoiceBehaviour)
+                                    DelayRequestBehaviour, delay_request, RandomChoiceBehaviour,
+                                    cond, case, StreamBehaviour, slowdown, random_stop)
 
 
 class BehaviourTests(TestCase):
@@ -404,5 +405,201 @@ class RandomChoiceBehaviourTests(TestCase):
         self.default_mock.assert_called_once_with(self.get_response_mock, self.request_mock)
 
 
-# TODO Add ConditionalBehaviour tests
-# TODO Add MultiConditionalBehaviour tests
+class ConditionalBehaviourTests(TestCase):
+    def setUp(self):
+        default_patcher = patch('uncertainty.behaviours._default')
+        self.default_mock = default_patcher.start()
+        self.addCleanup(self.default_mock.stop)
+
+        self.get_response_mock = MagicMock()
+        self.request_mock = MagicMock()
+
+        self.predicate = MagicMock()
+        self.behaviour = MagicMock()
+        self.alternative_behaviour = MagicMock()
+
+        self.cond = cond(self.predicate, self.behaviour, self.alternative_behaviour)
+
+    def test_behaviour_invoked_predicate_true(self):
+        """Tests that if the predicate is True, behaviour is invoked"""
+        self.predicate.return_value = True
+        self.cond(self.get_response_mock, self.request_mock)
+        self.behaviour.assert_called_once_with(self.get_response_mock, self.request_mock)
+
+    def test_returns_behaviour_result_predicate_true(self):
+        """Test that if the predicate is True, the result of invoking behaviour is returned"""
+        self.predicate.return_value = True
+        response = self.cond(self.get_response_mock, self.request_mock)
+        self.assertEqual(self.behaviour.return_value, response)
+
+    def test_behaviour_not_invoked_predicate_false(self):
+        """Tests that if the predicate is False, behaviour is not invoked"""
+        self.predicate.return_value = False
+        self.cond(self.get_response_mock, self.request_mock)
+        self.assertFalse(self.behaviour.called)
+
+    def test_returns_alternative_behaviour_result_predicate_true(self):
+        """Test that if the predicate is False, the result of invoking alternative_behaviour is
+        returned"""
+        self.predicate.return_value = False
+        response = self.cond(self.get_response_mock, self.request_mock)
+        self.assertEqual(self.alternative_behaviour.return_value, response)
+
+    def test_alternate_behaviour_invoked_predicate_false(self):
+        """Tests that if the predicate is False, alternate_behaviour is invoked"""
+        self.predicate.return_value = False
+        self.cond(self.get_response_mock, self.request_mock)
+        self.alternative_behaviour.assert_called_once_with(self.get_response_mock,
+                                                           self.request_mock)
+
+    def test_default_invoked_predicate_false(self):
+        """Tests that if the predicate is False, and no alternate_behaviour is provided, default is
+        invoked"""
+        self.predicate.return_value = False
+        cond_ = cond(self.predicate, self.behaviour)
+        cond_(self.get_response_mock, self.request_mock)
+        self.default_mock.assert_called_once_with(self.get_response_mock, self.request_mock)
+
+    def test_returns_default_result_predicate_false(self):
+        """Tests that if the predicate is False, and no alternate_behaviour is provided, the result
+        of invoking default is returned"""
+        self.predicate.return_value = False
+        cond_ = cond(self.predicate, self.behaviour)
+        response = cond_(self.get_response_mock, self.request_mock)
+        self.assertEqual(self.default_mock.return_value, response)
+
+
+class MultiConditionalBehaviourTests(TestCase):
+    def setUp(self):
+        default_patcher = patch('uncertainty.behaviours._default')
+        self.default_mock = default_patcher.start()
+        self.addCleanup(self.default_mock.stop)
+
+        self.get_response_mock = MagicMock()
+        self.request_mock = MagicMock()
+
+        self.predicate_0 = MagicMock()
+        self.predicate_1 = MagicMock()
+        self.behaviour_0 = MagicMock()
+        self.behaviour_1 = MagicMock()
+        self.default_behaviour = MagicMock()
+
+        self.case = case([(self.predicate_0, self.behaviour_0),
+                          (self.predicate_1, self.behaviour_1)
+                          ], default_behaviour=self.default_behaviour)
+
+    def test_behaviour_0_invoked_predicate_0_true(self):
+        """Tests that if the predicate_0 is True, and predicate_1 is False, behaviour_0 is
+        invoked"""
+        self.predicate_0.return_value = True
+        self.predicate_1.return_value = False
+        self.case(self.get_response_mock, self.request_mock)
+        self.behaviour_0.assert_called_once_with(self.get_response_mock, self.request_mock)
+
+    def test_behaviour_0_result_returned_predicate_0_true(self):
+        """Tests that if the predicate_0 is True, and predicate_1 is False, the result of invoking
+        behaviour_0 is returned"""
+        self.predicate_0.return_value = True
+        self.predicate_1.return_value = False
+        response = self.case(self.get_response_mock, self.request_mock)
+        self.assertEqual(self.behaviour_0.return_value, response)
+
+    def test_behaviour_1_not_invoked_predicate_0_true(self):
+        """Tests that if the predicate_0 is True, and predicate_1 is False, behaviour_1 is not
+        invoked"""
+        self.predicate_0.return_value = True
+        self.predicate_1.return_value = False
+        self.case(self.get_response_mock, self.request_mock)
+        self.assertFalse(self.behaviour_1.called)
+
+    def test_default_behaviour_not_invoked_predicate_0_true(self):
+        """Tests that if the predicate_0 is True, and predicate_1 is False, default_behaviour is
+        not invoked"""
+        self.predicate_0.return_value = True
+        self.predicate_1.return_value = False
+        self.case(self.get_response_mock, self.request_mock)
+        self.assertFalse(self.default_behaviour.called)
+
+    def test_behaviour_1_invoked_predicate_1_true(self):
+        """Tests that if the predicate_0 is False, and predicate_1 is True, behaviour_1 is
+        invoked"""
+        self.predicate_0.return_value = False
+        self.predicate_1.return_value = True
+        self.case(self.get_response_mock, self.request_mock)
+        self.behaviour_1.assert_called_once_with(self.get_response_mock, self.request_mock)
+
+    def test_behaviour_1_result_returned_predicate_1_true(self):
+        """Tests that if the predicate_0 is False, and predicate_0 is False, the result of invoking
+        behaviour_1 is returned"""
+        self.predicate_0.return_value = False
+        self.predicate_1.return_value = True
+        response = self.case(self.get_response_mock, self.request_mock)
+        self.assertEqual(self.behaviour_1.return_value, response)
+
+    def test_behaviour_0_not_invoked_predicate_1_true(self):
+        """Tests that if the predicate_0 is False, and predicate_1 is True, behaviour_0 is not
+        invoked"""
+        self.predicate_0.return_value = False
+        self.predicate_1.return_value = True
+        self.case(self.get_response_mock, self.request_mock)
+        self.assertFalse(self.behaviour_0.called)
+
+    def test_default_behaviour_not_invoked_predicate_1_true(self):
+        """Tests that if the predicate_0 is False, and predicate_1 is True, default_behaviour is
+        not invoked"""
+        self.predicate_0.return_value = False
+        self.predicate_1.return_value = True
+        self.case(self.get_response_mock, self.request_mock)
+        self.assertFalse(self.default_behaviour.called)
+
+    def test_behaviour_0_invoked_predicate_0_predicate_1_true(self):
+        """Tests that if both predicates are True, behaviour_0 is invoked (short circuit)"""
+        self.predicate_0.return_value = True
+        self.predicate_1.return_value = True
+        self.case(self.get_response_mock, self.request_mock)
+        self.behaviour_0.assert_called_once_with(self.get_response_mock, self.request_mock)
+
+    def test_behaviour_1_not_invoked_predicate_0_predicate_1_true(self):
+        """Tests that if both predicates are True, behaviour_1 is not invoked (short circuit)"""
+        self.predicate_0.return_value = True
+        self.predicate_1.return_value = True
+        self.case(self.get_response_mock, self.request_mock)
+        self.assertFalse(self.behaviour_1.called)
+
+    def test_default_behaviour_invoked_predicate_0_predicate_1_false(self):
+        """Tests that if both predicates are False, default_behaviour is invoked"""
+        self.predicate_0.return_value = False
+        self.predicate_1.return_value = False
+        self.case(self.get_response_mock, self.request_mock)
+        self.default_behaviour.assert_called_once_with(self.get_response_mock, self.request_mock)
+
+    def test_default_behaviour_resutl_returned_predicate_0_predicate_1_false(self):
+        """Tests that if both predicates are False, the result of invoking default_behaviour is
+        returned"""
+        self.predicate_0.return_value = False
+        self.predicate_1.return_value = False
+        response = self.case(self.get_response_mock, self.request_mock)
+        self.assertEqual(self.default_behaviour.return_value, response)
+
+    def test_default_invoked_both_predicates_false(self):
+        """Tests that if the both predicates are False, and no default_behaviour is provided,
+        default is invoked"""
+        self.predicate_0.return_value = False
+        self.predicate_1.return_value = False
+        case_ = case([(self.predicate_0, self.behaviour_0),(self.predicate_1, self.behaviour_1)])
+        case_(self.get_response_mock, self.request_mock)
+        self.default_mock.assert_called_once_with(self.get_response_mock, self.request_mock)
+
+    def test_returns_default_result_both_predicates_false(self):
+        """Tests that if the predicate is False, and no default_behaviour is provided, the result
+        of invoking default is returned"""
+        self.predicate_0.return_value = False
+        self.predicate_1.return_value = False
+        case_ = case([(self.predicate_0, self.behaviour_0),(self.predicate_1, self.behaviour_1)])
+        response = case_(self.get_response_mock, self.request_mock)
+        self.assertEqual(self.default_mock.return_value, response)
+
+
+# TODO Add StreamBehaviour tests
+# TODO Add SlowdownStreamBehaviour tests
+# TODO Add RandomStopStreamBehaviour tests

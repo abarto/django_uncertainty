@@ -270,7 +270,7 @@ random_choice = RandomChoiceBehaviour
 
 
 class ConditionalBehaviour(Behaviour):
-    def __init__(self, predicate, behaviour, alternative_behaviour=_default):
+    def __init__(self, predicate, behaviour, alternative_behaviour=None):
         """A Behaviour that invokes the encapsulated behaviour if a condition is met, otherwise it
         invokes the alternative behaviour. The default alternative behaviour is just going through
         the usual middleware path.
@@ -281,7 +281,7 @@ class ConditionalBehaviour(Behaviour):
         """
         self._predicate = predicate
         self._behaviour = behaviour
-        self._alternative_behaviour = alternative_behaviour
+        self._alternative_behaviour = alternative_behaviour or _default  # makes testing easier
 
     def __call__(self, get_response, request):
         """If the predicate condition is met it returns the result of invoking the encapsulated
@@ -309,7 +309,7 @@ cond = ConditionalBehaviour
 
 
 class MultiConditionalBehaviour(Behaviour):
-    def __init__(self, predicates_behaviours, default_behaviour=_default):
+    def __init__(self, predicates_behaviours, default_behaviour=None):
         """A Behaviour that takes several conditions (predicates) and behaviours and executes the
         behaviour associated with the fist condition that is met. If no conditions are met,
         the supplied default behaviour is invoked.
@@ -317,7 +317,7 @@ class MultiConditionalBehaviour(Behaviour):
         :param default_behaviour: The default behaviour to invoke if no conditions are met
         """
         self._predicates_behaviours = predicates_behaviours
-        self._default_behaviour = default_behaviour
+        self._default_behaviour = default_behaviour or _default  # makes testing easier
 
     def __call__(self, get_response, request):
         """It iterates through the conditions until one is met, and its associated behaviour is
@@ -341,4 +341,77 @@ class MultiConditionalBehaviour(Behaviour):
                     predicates_behaviours=', '.join(
                         '{p} -> {b}'.format(p=p, b=b) for p, b in self._predicates_behaviours)))
 multi_conditional = MultiConditionalBehaviour
+multi_cond = MultiConditionalBehaviour
 case = MultiConditionalBehaviour
+
+
+class StreamBehaviour(Behaviour):
+    def wrap_streaming_content(self, streaming_content):
+        """
+        A generator that wraps the streaming content of the response returned get_response. Each
+        chunk of the content is yielded. It is based on technique mentioned in
+        https://docs.djangoproject.com/en/1.10/topics/http/middleware/#dealing-with-streaming-responses
+        :param streaming_content: The streaming content of the response
+        """
+        for chunk in streaming_content:
+            yield chunk
+
+    def __call__(self, get_response, request):
+        """If the response returned by get_response (as given by the UncertaintyMiddleware
+        middleware is a streaming response, the streaming content is wrapped by the
+        wrap_streaming_content generator. If the response is not a streaming one.
+        :param get_response: The get_response method provided by the Django stack
+        :param request: The request that triggered the middleware
+        :return: The result of calling get_response with the request parameter
+        """
+        response = get_response(request)
+
+        if response.streaming:
+            response.streaming_content = self.wrap_streaming_content(response.streaming_content)
+
+        return response
+
+
+class SlowdownStreamBehaviour(StreamBehaviour):
+    def __init__(self, seconds):
+        """A Behaviour that introduces a delay between each chunk of the streaming content
+        returned by get_response.
+        :param seconds: The amount of seconds to wait between each chunk of the streaming content
+        """
+        self._seconds = seconds
+
+    def wrap_streaming_content(self, streaming_content):
+        """Introduces a delay before yielding each chunk of streaming_content.
+        :param streaming_content: The streaming_content field of the response.
+        """
+        for chunk in streaming_content:
+            sleep(self._seconds)
+            yield chunk
+
+    def __str__(self):
+        return ('SlowdownStreamBehaviour('
+                'seconds={seconds})').format(seconds=self._seconds)
+slowdown = SlowdownStreamBehaviour
+
+
+class RandomStopStreamBehaviour(StreamBehaviour):
+    def __init__(self, probability, stop_gracefully=True):
+        """A Behaviour that stops the streaming with a certain probability.
+        :param probability: The probability of stopping the stream
+        """
+        self._probability = probability
+
+    def wrap_streaming_content(self, streaming_content):
+        """Stops the iterator with with a certain probability.
+        :param streaming_content: The streaming_content field of the response.
+        """
+        for chunk in streaming_content:
+            if random() < self._probability:
+                raise StopIteration()
+
+            yield chunk
+
+    def __str__(self):
+        return ('RandomStopStreamBehaviour('
+                'probability={probability},').format(probabilty=self._probability)
+random_stop = RandomStopStreamBehaviour
