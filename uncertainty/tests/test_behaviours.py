@@ -5,7 +5,7 @@ from uncertainty.behaviours import (Behaviour, default, HttpResponseBehaviour, h
                                     bad_request, forbidden, not_allowed, server_error, not_found,
                                     status, json, DelayResponseBehaviour, delay,
                                     DelayRequestBehaviour, delay_request, RandomChoiceBehaviour,
-                                    slowdown, random_stop)
+                                    cond, multi_conditional, StreamBehaviour, slowdown, random_stop)
 
 
 class BehaviourTests(TestCase):
@@ -403,6 +403,71 @@ class RandomChoiceBehaviourTests(TestCase):
         self.random_mock.return_value = 0.7
         self.random_choice(self.get_response_mock, self.request_mock)
         self.default_mock.assert_called_once_with(self.get_response_mock, self.request_mock)
+
+
+class ConditionalBehaviourTests(TestCase):
+    def setUp(self):
+        default_patcher = patch('uncertainty.behaviours._default')
+        self.default_mock = default_patcher.start()
+        self.addCleanup(self.default_mock.stop)
+
+        self.get_response_mock = MagicMock()
+        self.request_mock = MagicMock()
+
+        self.predicate = MagicMock()
+        self.behaviour = MagicMock()
+        self.alternative_behaviour = MagicMock()
+
+        self.cond = cond(self.predicate, self.behaviour, self.alternative_behaviour)
+
+    def test_behaviour_invoked_predicate_true(self):
+        """Tests that if the predicate is True, behaviour is invoked"""
+        self.predicate.return_value = True
+        self.cond(self.get_response_mock, self.request_mock)
+        self.behaviour.assert_called_once_with(self.get_response_mock, self.request_mock)
+
+    def test_returns_behaviour_result_predicate_true(self):
+        """Test that if the predicate is True, the result of invoking behaviour is returned"""
+        self.predicate.return_value = True
+        response = self.cond(self.get_response_mock, self.request_mock)
+        self.assertEqual(self.behaviour.return_value, response)
+
+    def test_behaviour_not_invoked_predicate_false(self):
+        """Tests that if the predicate is False, behaviour is not invoked"""
+        self.predicate.return_value = False
+        self.cond(self.get_response_mock, self.request_mock)
+        self.assertFalse(self.behaviour.called)
+
+    def test_returns_alternative_behaviour_result_predicate_true(self):
+        """Test that if the predicate is False, the result of invoking alternative_behaviour is
+        returned"""
+        self.predicate.return_value = False
+        response = self.cond(self.get_response_mock, self.request_mock)
+        self.assertEqual(self.alternative_behaviour.return_value, response)
+
+    def test_alternate_behaviour_invoked_predicate_false(self):
+        """Tests that if the predicate is False, alternate_behaviour is invoked"""
+        self.predicate.return_value = False
+        self.cond(self.get_response_mock, self.request_mock)
+        self.alternative_behaviour.assert_called_once_with(self.get_response_mock,
+                                                           self.request_mock)
+
+    def test_default_invoked_predicate_false(self):
+        """Tests that if the predicate is False, and no alternate_behaviour is provided, default is
+        invoked"""
+        self.predicate.return_value = False
+        cond_ = cond(self.predicate, self.behaviour)
+        cond_(self.get_response_mock, self.request_mock)
+        self.default_mock.assert_called_once_with(self.get_response_mock, self.request_mock)
+
+    def test_returns_default_result_predicate_false(self):
+        """Tests that if the predicate is False, and no alternate_behaviour is provided, the result
+        of invoking default is returned"""
+        self.predicate.return_value = False
+        cond_ = cond(self.predicate, self.behaviour)
+        cond_(self.get_response_mock, self.request_mock)
+        response = cond_(self.get_response_mock, self.request_mock)
+        self.assertEqual(self.default_mock.return_value, response)
 
 
 # TODO Add ConditionalBehaviour tests

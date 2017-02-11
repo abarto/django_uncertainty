@@ -270,7 +270,7 @@ random_choice = RandomChoiceBehaviour
 
 
 class ConditionalBehaviour(Behaviour):
-    def __init__(self, predicate, behaviour, alternative_behaviour=_default):
+    def __init__(self, predicate, behaviour, alternative_behaviour=None):
         """A Behaviour that invokes the encapsulated behaviour if a condition is met, otherwise it
         invokes the alternative behaviour. The default alternative behaviour is just going through
         the usual middleware path.
@@ -281,7 +281,7 @@ class ConditionalBehaviour(Behaviour):
         """
         self._predicate = predicate
         self._behaviour = behaviour
-        self._alternative_behaviour = alternative_behaviour
+        self._alternative_behaviour = alternative_behaviour or _default  # makes testing easier
 
     def __call__(self, get_response, request):
         """If the predicate condition is met it returns the result of invoking the encapsulated
@@ -309,7 +309,7 @@ cond = ConditionalBehaviour
 
 
 class MultiConditionalBehaviour(Behaviour):
-    def __init__(self, predicates_behaviours, default_behaviour=_default):
+    def __init__(self, predicates_behaviours, default_behaviour=None):
         """A Behaviour that takes several conditions (predicates) and behaviours and executes the
         behaviour associated with the fist condition that is met. If no conditions are met,
         the supplied default behaviour is invoked.
@@ -317,7 +317,7 @@ class MultiConditionalBehaviour(Behaviour):
         :param default_behaviour: The default behaviour to invoke if no conditions are met
         """
         self._predicates_behaviours = predicates_behaviours
-        self._default_behaviour = default_behaviour
+        self._default_behaviour = default_behaviour or _default  # makes testing easier
 
     def __call__(self, get_response, request):
         """It iterates through the conditions until one is met, and its associated behaviour is
@@ -341,6 +341,7 @@ class MultiConditionalBehaviour(Behaviour):
                     predicates_behaviours=', '.join(
                         '{p} -> {b}'.format(p=p, b=b) for p, b in self._predicates_behaviours)))
 multi_conditional = MultiConditionalBehaviour
+multi_cond = MultiConditionalBehaviour
 case = MultiConditionalBehaviour
 
 
