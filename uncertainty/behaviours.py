@@ -342,3 +342,75 @@ class MultiConditionalBehaviour(Behaviour):
                         '{p} -> {b}'.format(p=p, b=b) for p, b in self._predicates_behaviours)))
 multi_conditional = MultiConditionalBehaviour
 case = MultiConditionalBehaviour
+
+
+class StreamBehaviour(Behaviour):
+    def wrap_streaming_content(self, streaming_content):
+        """
+        A generator that wraps the streaming content of the response returned get_response. Each
+        chunk of the content is yielded. It is based on technique mentioned in
+        https://docs.djangoproject.com/en/1.10/topics/http/middleware/#dealing-with-streaming-responses
+        :param streaming_content: The streaming content of the response
+        """
+        for chunk in streaming_content:
+            yield chunk
+
+    def __call__(self, get_response, request):
+        """If the response returned by get_response (as given by the UncertaintyMiddleware
+        middleware is a streaming response, the streaming content is wrapped by the
+        wrap_streaming_content generator. If the response is not a streaming one.
+        :param get_response: The get_response method provided by the Django stack
+        :param request: The request that triggered the middleware
+        :return: The result of calling get_response with the request parameter
+        """
+        response = get_response(request)
+
+        if response.streaming:
+            response.streaming_content = self.wrap_streaming_content(response.streaming_content)
+
+        return response
+
+
+class SlowdownStreamBehaviour(StreamBehaviour):
+    def __init__(self, seconds):
+        """A Behaviour that introduces a delay between each chunk of the streaming content
+        returned by get_response.
+        :param seconds: The amount of seconds to wait between each chunk of the streaming content
+        """
+        self._seconds = seconds
+
+    def wrap_streaming_content(self, streaming_content):
+        """Introduces a delay before yielding each chunk of streaming_content.
+        :param streaming_content: The streaming_content field of the response.
+        """
+        for chunk in streaming_content:
+            sleep(self._seconds)
+            yield chunk
+
+    def __str__(self):
+        return ('SlowdownStreamBehaviour('
+                'seconds={seconds})').format(seconds=self._seconds)
+slowdown = SlowdownStreamBehaviour
+
+
+class RandomStopStreamBehaviour(StreamBehaviour):
+    def __init__(self, probability, stop_gracefully=True):
+        """A Behaviour that stops the streaming with a certain probability.
+        :param probability: The probability of stopping the stream
+        """
+        self._probability = probability
+
+    def wrap_streaming_content(self, streaming_content):
+        """Stops the iterator with with a certain probability.
+        :param streaming_content: The streaming_content field of the response.
+        """
+        for chunk in streaming_content:
+            if random() < self._probability:
+                raise StopIteration()
+
+            yield chunk
+
+    def __str__(self):
+        return ('RandomStopStreamBehaviour('
+                'probability={probability},').format(probabilty=self._probability)
+random_stop = RandomStopStreamBehaviour

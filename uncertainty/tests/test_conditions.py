@@ -2,7 +2,8 @@ from django.test import TestCase
 from unittest.mock import MagicMock, patch
 
 from uncertainty.conditions import (Predicate, NotPredicate, OrPredicate, AndPredicate,
-                                    IsMethodPredicate, is_get, is_delete, is_post, is_put)
+                                    IsMethodPredicate, is_get, is_delete, is_post, is_put,
+                                    has_parameter, is_authenticated, user_is, path_matches)
 
 
 class PredicateTests(TestCase):
@@ -255,7 +256,92 @@ class IsPutTests(TestCase):
         self.assertFalse(is_put(self.get_response_mock, self.request_mock))
 
 
-# TODO Add HasRequestParameterPredicate tests
-# TODO Add PathMatchesRegexpPredicate tests
-# TODO Add IsAuthenticatedPredicate tests
-# TODO Add IsUserPredicate tests
+class HasRequestParameterPredicateTests(TestCase):
+    def setUp(self):
+        self.get_response_mock = MagicMock()
+        self.request_mock = MagicMock()
+        self.parameter_name = 'name'
+        self.has_parameter = has_parameter(self.parameter_name)
+
+    def test_returns_true_if_request_has_get_parameter(self):
+        """Tests that calling has_parameter returns True if the request has a specific GET
+        parameter"""
+        self.request_mock.GET = {self.parameter_name: 'foobar'}
+        self.assertTrue(self.has_parameter(self.get_response_mock, self.request_mock))
+
+    def test_returns_true_if_request_has_post_parameter(self):
+        """Tests that calling has_parameter returns True if the request has a specific POST
+        parameter"""
+        self.request_mock.POST = {self.parameter_name: 'foobar'}
+        self.assertTrue(self.has_parameter(self.get_response_mock, self.request_mock))
+
+    def test_returns_false_if_request_hasnt_get_parameter(self):
+        """Tests that calling has_parameter returns False if the request doesn't have a specific GET
+        parameter"""
+        self.request_mock.GET = dict()
+        self.assertFalse(self.has_parameter(self.get_response_mock, self.request_mock))
+
+    def test_returns_false_if_request_hasnt_post_parameter(self):
+        """Tests that calling has_parameter returns False if the request doesn't have a specific
+        POST parameter"""
+        self.request_mock.POST = dict()
+        self.assertFalse(self.has_parameter(self.get_response_mock, self.request_mock))
+
+
+class PathMatchesRegexpPredicateTests(TestCase):
+    def setUp(self):
+        self.get_response_mock = MagicMock()
+        self.request_mock = MagicMock()
+        self.path_matches = path_matches('^/some_path.*')
+
+    def test_returns_true_if_request_path_matches_regexp(self):
+        """Tests that calling path_matches returns True if the request path matches the regexp"""
+        self.request_mock.path = '/some_path/foobar'
+        self.assertTrue(self.path_matches(self.get_response_mock, self.request_mock))
+
+    def test_returns_false_if_request_path_doesnt_match_regexp(self):
+        """Tests that calling path_matches returns False if the request path doesn't match the
+        regexp"""
+        self.request_mock.path = '/some_other_path/foobar'
+        self.assertFalse(self.path_matches(self.get_response_mock, self.request_mock))
+
+
+class IsAuthenticatedPredicateTests(TestCase):
+    def setUp(self):
+        self.get_response_mock = MagicMock()
+        self.request_mock = MagicMock()
+        self.is_authenticated = is_authenticated()
+
+    def test_returns_true_if_request_user_is_authenticated(self):
+        """Tests that calling is_authenticated returns True if the request user is authenticated"""
+        self.request_mock.user.is_authenticated = True
+        self.assertTrue(self.is_authenticated(self.get_response_mock, self.request_mock))
+
+    def test_returns_false_if_request_user_isnt_authenticated(self):
+        """Tests that calling is_authenticated returns False if the request user is not
+        authenticated"""
+        self.request_mock.user.is_authenticated = False
+        self.assertFalse(self.is_authenticated(self.get_response_mock, self.request_mock))
+        request_mock = MagicMock(spec=[])
+        self.assertFalse(self.is_authenticated(self.get_response_mock, request_mock))
+
+
+class IsUserPredicateTests(TestCase):
+    def setUp(self):
+        self.get_response_mock = MagicMock()
+        self.request_mock = MagicMock()
+        self.username = 'username'
+        self.user_is = user_is(self.username)
+
+    def test_returns_true_if_request_user_matches_predicates(self):
+        """Tests that calling user_is returns True if request user matches the predicate's"""
+        self.request_mock.user.username = self.username
+        self.assertTrue(self.user_is(self.get_response_mock, self.request_mock))
+
+    def test_returns_false_if_request_user_doesnt_match_predicates(self):
+        """Tests that calling user_is returns False if request user matches doesn't match the
+        predicate's"""
+        self.request_mock.user.username = 'foobar'
+        self.assertFalse(self.user_is(self.get_response_mock, self.request_mock))
+        request_mock = MagicMock(spec=[])
+        self.assertFalse(self.user_is(self.get_response_mock, request_mock))

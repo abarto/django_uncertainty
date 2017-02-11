@@ -4,7 +4,8 @@ from unittest.mock import MagicMock, patch
 from uncertainty.behaviours import (Behaviour, default, HttpResponseBehaviour, html, ok,
                                     bad_request, forbidden, not_allowed, server_error, not_found,
                                     status, json, DelayResponseBehaviour, delay,
-                                    DelayRequestBehaviour, delay_request, RandomChoiceBehaviour)
+                                    DelayRequestBehaviour, delay_request, RandomChoiceBehaviour,
+                                    slowdown, random_stop)
 
 
 class BehaviourTests(TestCase):
@@ -406,3 +407,6 @@ class RandomChoiceBehaviourTests(TestCase):
 
 # TODO Add ConditionalBehaviour tests
 # TODO Add MultiConditionalBehaviour tests
+# TODO Add StreamBehaviour tests
+# TODO Add SlowdownStreamBehaviour tests
+# TODO Add RandomStopStreamBehaviour tests

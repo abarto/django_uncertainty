@@ -168,7 +168,8 @@ class PathMatchesRegexpPredicate(Predicate):
 
     def __str__(self):
         return 'PathMatchesRegexpPredicate(regexp={regexp})'.format(regexp=self._regexp)
-path_is = PathMatchesRegexpPredicate
+path_matches = PathMatchesRegexpPredicate
+path_is = path_matches
 
 
 class IsAuthenticatedPredicate(Predicate):
@@ -178,11 +179,11 @@ class IsAuthenticatedPredicate(Predicate):
         :param request: The request that triggered the middleware
         :return: True if the request is authenticated, False otherwise
         """
-        return hasattr(request, 'user') and request.user.is_authenticated()
+        return hasattr(request, 'user') and request.user.is_authenticated
 
     def __str__(self):
         return 'IsAuthenticatedPredicate()'
-is_authenticated = IsAuthenticatedPredicate()
+is_authenticated = IsAuthenticatedPredicate
 
 
 class IsUserPredicate(Predicate):
