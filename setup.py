@@ -9,8 +9,8 @@ with open(path.join(path.abspath(path.dirname(__file__)), 'README.rst')) as f:
 
 
 setup(name='django_uncertainty',
-      version='1.6',
-      description='A Django middleware to generate predictable errors on sites',
+      version='1.7',
+      description='A Django middeware to generate predictable errors on sites',
       long_description=long_description,
       author='Agustin Barto',
       author_email='abarto@gmail.com',
